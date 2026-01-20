@@ -557,6 +557,13 @@
       color: var(--text-tertiary);
     }
 
+    .hotkey-hint {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.25);
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
     /* Select dropdown styling */
     .control-select {
       width: 100%;
@@ -909,6 +916,7 @@
     <div class="control-group">
       <div class="control-label">
         <span>Time of Day</span>
+        <span class="hotkey-hint">&larr; &rarr;</span>
       </div>
       <div class="time-grid" id="timeGrid">
         <button class="time-btn active" data-time="morning">
@@ -965,6 +973,7 @@
     <div class="control-group">
       <div class="control-label">
         <span>Weather</span>
+        <span class="hotkey-hint">&uarr; &darr;</span>
         <button class="randomize-btn" id="randomizeBtn">Random</button>
       </div>
       <select class="control-select" id="weatherSelect">
@@ -1955,6 +1964,44 @@
         currentWeather = options[Math.floor(Math.random() * options.length)];
         document.getElementById('weatherSelect').value = currentWeather;
         updateWidget();
+      });
+
+      // Keyboard shortcuts
+      const TIMES = ['morning', 'afternoon', 'evening', 'night'];
+
+      document.addEventListener('keydown', (e) => {
+        // Don't trigger if user is typing in an input/select
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        const weatherOptions = BIOME_WEATHER[currentBiome];
+
+        if (e.key === 'ArrowLeft') {
+          // Previous time (with wrap)
+          const currentIndex = TIMES.indexOf(currentTime);
+          currentTime = TIMES[(currentIndex - 1 + TIMES.length) % TIMES.length];
+          updateWidget();
+          e.preventDefault();
+        } else if (e.key === 'ArrowRight') {
+          // Next time (with wrap)
+          const currentIndex = TIMES.indexOf(currentTime);
+          currentTime = TIMES[(currentIndex + 1) % TIMES.length];
+          updateWidget();
+          e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+          // Previous weather (with wrap)
+          const currentIndex = weatherOptions.indexOf(currentWeather);
+          currentWeather = weatherOptions[(currentIndex - 1 + weatherOptions.length) % weatherOptions.length];
+          document.getElementById('weatherSelect').value = currentWeather;
+          updateWidget();
+          e.preventDefault();
+        } else if (e.key === 'ArrowDown') {
+          // Next weather (with wrap)
+          const currentIndex = weatherOptions.indexOf(currentWeather);
+          currentWeather = weatherOptions[(currentIndex + 1) % weatherOptions.length];
+          document.getElementById('weatherSelect').value = currentWeather;
+          updateWidget();
+          e.preventDefault();
+        }
       });
 
     }
