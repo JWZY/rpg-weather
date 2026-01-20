@@ -655,6 +655,13 @@
       transform: scale(0.95);
     }
 
+    /* Fullscreen hint inline */
+    .fullscreen-hint-inline {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.25);
+      text-align: center;
+    }
+
     /* Byline */
     .byline {
       font-size: 11px;
@@ -974,7 +981,7 @@
     <div class="control-group">
       <div class="control-label">
         <span>Weather</span>
-        <button class="randomize-btn" id="randomizeBtn">Randomize</button>
+        <button class="randomize-btn" id="randomizeBtn">Randomize <span class="hotkey-hint">(R)</span></button>
         <span class="hotkey-hint">&uarr; &darr;</span>
       </div>
       <select class="control-select" id="weatherSelect">
@@ -983,6 +990,8 @@
     </div>
 
   </div>
+
+  <div class="fullscreen-hint-inline">Press <span class="hotkey-hint">F</span> to enter/exit fullscreen</div>
 
   <div class="byline">by <a href="https://github.com/jwzy" target="_blank">Javan Wang</a></div>
 
@@ -2002,6 +2011,19 @@
           currentWeather = weatherOptions[(currentIndex + 1) % weatherOptions.length];
           document.getElementById('weatherSelect').value = currentWeather;
           changed = true;
+          e.preventDefault();
+        } else if (e.key === 'r' || e.key === 'R') {
+          // Randomize weather
+          currentWeather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)];
+          document.getElementById('weatherSelect').value = currentWeather;
+          changed = true;
+        } else if (e.key === 'f' || e.key === 'F') {
+          // Toggle fullscreen
+          if (isFullscreen) {
+            exitFullscreen();
+          } else {
+            enterFullscreen();
+          }
           e.preventDefault();
         }
 
