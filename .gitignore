@@ -1,0 +1,22 @@
+# Dev files
+icon-test-sheet.html
+fontawesome-css/
+webfonts/
+
+# Unused icons (only keep the 12 biome icons we use)
+icons/*
+!icons/trees.svg
+!icons/cactus.svg
+!icons/snowflakes.svg
+!icons/frog.svg
+!icons/mountains.svg
+!icons/seedling.svg
+!icons/octopus.svg
+!icons/tree-palm.svg
+!icons/fire.svg
+!icons/icicles.svg
+!icons/elephant.svg
+!icons/bat.svg
+
+# OS files
+.DS_Store
