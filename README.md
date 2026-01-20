@@ -13,6 +13,7 @@ A tabletop RPG weather generator with 12 biomes, dynamic weather effects, and ti
 - **Time of Day** - Morning, Afternoon, Evening, and Night with visual overlays
 - **Animated Particles** - Weather effects rendered with animated particles
 - **iOS Widget Design** - Styled after iOS medium widgets (329x155pt)
+- **Fullscreen Mode** - Click the widget to enter immersive fullscreen with smooth zoom animation and 2x fidelity rendering
 
 ## Usage
 

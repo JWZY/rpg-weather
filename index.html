@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RPG Weather Widget</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path fill='%23f4a261' d='M575.2 325.7c.2-1.9.8-3.7.8-5.6 0-35.3-28.7-64-64-64-12.6 0-24.2 3.8-34.1 10-17.6-38.8-56.5-66-101.9-66-61.8 0-112 50.1-112 112 0 3 .7 5.8.9 8.7-49.6 3.7-88.9 44.7-88.9 95.3 0 53 43 96 96 96h272c53 0 96-43 96-96 0-42.1-27.2-77.4-64.8-90.4zm-430.4-22.6c-43.7-43.7-43.7-114.7 0-158.3 43.7-43.7 114.7-43.7 158.4 0 9.7 9.7 16.9 20.9 22.3 32.7 9.8-3.7 20.1-6 30.7-7.5L386 81.1c4-11.9-7.3-23.1-19.2-19.2L279 91.2 237.5 8.4C232-2.8 216-2.8 210.4 8.4L169 91.2 81.1 61.9C69.3 58 58 69.3 61.9 81.1l29.3 87.8-82.8 41.5c-11.2 5.6-11.2 21.5 0 27.1l82.8 41.4-29.3 87.8c-4 11.9 7.3 23.1 19.2 19.2l76.1-25.3c6.1-12.4 14-23.7 23.6-33.5-13.1-5.4-25.4-13.4-36-24zm-4.8-79.2c0 40.8 29.3 74.8 67.9 82.3 8-4.7 16.3-8.8 25.2-11.7 5.4-44.3 31-82.5 67.4-105C287.3 160.4 258 140 224 140c-46.3 0-84 37.6-84 83.9z'/></svg>">
   <meta name="description" content="A tabletop RPG weather generator with 12 biomes, dynamic weather, and time of day. Perfect for D&D, Pathfinder, and other TTRPGs.">
 
   <!-- Open Graph / Social Media Preview -->
@@ -597,7 +598,6 @@
       font-size: 11px;
       color: rgba(255, 255, 255, 0.4);
       text-align: center;
-      margin-top: 12px;
     }
 
     .byline a {
@@ -609,9 +609,215 @@
     .byline a:hover {
       color: rgba(255, 255, 255, 0.9);
     }
+
+    /* Fullscreen mode */
+    .fullscreen-container {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      overflow: hidden;
+    }
+
+    .fullscreen-container.active {
+      display: flex;
+    }
+
+    .fullscreen-container .widget {
+      border-radius: 0;
+      box-shadow: none;
+      transform-origin: center center;
+      cursor: pointer;
+      /* Subtle blur for softer, more cinematic feel */
+      filter: blur(0.5px);
+    }
+
+    /* Hide widget UI in fullscreen (we show separate overlay instead) */
+    .fullscreen-container .widget-header,
+    .fullscreen-container .widget-bottom {
+      display: none !important;
+    }
+
+    /* Fullscreen UI overlay - separate from the blurred widget */
+    .fullscreen-ui {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10001;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .fullscreen-container.active.ui-visible .fullscreen-ui {
+      opacity: 1;
+    }
+
+    .fullscreen-ui-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .fullscreen-ui-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .fullscreen-ui-time {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-weight: 500;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .fullscreen-ui-time svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+
+    /* Savanna needs white icon for visibility in fullscreen too */
+    .biome-savanna .fullscreen-ui-time svg {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .fullscreen-ui-biome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .fullscreen-ui-biome svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .fullscreen-ui-weather {
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .fullscreen-ui-weather-name {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .fullscreen-ui-weather-detail {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .fullscreen-ui-conditions {
+      text-align: right;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .fullscreen-ui-temp {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .fullscreen-ui-wind {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Fullscreen API styles */
+    .fullscreen-container:fullscreen {
+      display: flex;
+    }
+
+    .fullscreen-container:-webkit-full-screen {
+      display: flex;
+    }
+
+    /* Hint text for fullscreen - synced with UI visibility */
+    .fullscreen-hint {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10001;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      transition: opacity 0.3s ease;
+    }
+
+    .fullscreen-container.active.ui-visible .fullscreen-hint {
+      opacity: 1;
+    }
+
+    /* Widget clickable cursor */
+    .widget {
+      cursor: pointer;
+    }
+
+    /* Zoom transition for entering fullscreen */
+    .fullscreen-container .widget {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-radius 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                  filter 0.3s ease;
+    }
+
+    .fullscreen-container.zooming .widget {
+      transition: none;
+      filter: none;
+    }
   </style>
 </head>
 <body>
+  <!-- Fullscreen container (cloned widget goes here) -->
+  <div class="fullscreen-container" id="fullscreenContainer">
+    <!-- UI overlay (not blurred, fades out) -->
+    <div class="fullscreen-ui" id="fullscreenUI">
+      <div class="fullscreen-ui-top">
+        <div class="fullscreen-ui-time">
+          <svg id="fsTimeIcon" viewBox="0 0 24 24" fill="currentColor"></svg>
+          <span id="fsTimeLabel">MORNING</span>
+        </div>
+        <div class="fullscreen-ui-biome">
+          <svg id="fsBiomeIcon" viewBox="0 0 24 24" fill="currentColor"></svg>
+          <span id="fsBiomeLabel">Forest</span>
+        </div>
+      </div>
+      <div class="fullscreen-ui-bottom">
+        <div class="fullscreen-ui-weather">
+          <div class="fullscreen-ui-weather-name" id="fsWeatherName">Clear</div>
+          <div class="fullscreen-ui-weather-detail" id="fsWeatherDetail">Calm conditions</div>
+        </div>
+        <div class="fullscreen-ui-conditions">
+          <div class="fullscreen-ui-temp" id="fsTempFeel">Mild</div>
+          <div class="fullscreen-ui-wind" id="fsWindSpeed">Calm</div>
+        </div>
+      </div>
+    </div>
+    <div class="fullscreen-hint">Tap anywhere to exit</div>
+  </div>
+
   <div class="widget biome-forest time-morning" id="weatherWidget">
     <div class="weather-particles" id="particles"></div>
     <div class="lightning-flash" id="lightning"></div>
@@ -711,9 +917,10 @@
         <!-- Options populated dynamically based on biome -->
       </select>
     </div>
+
   </div>
 
-  <div class="byline">by <a href="https://github.com/jwzy" target="_blank">Javan</a></div>
+  <div class="byline">by <a href="https://github.com/jwzy" target="_blank">Javan Wang</a></div>
 
   <script>
     // Biome-weather mapping
@@ -841,11 +1048,21 @@
 
     // Particle system class
     class WeatherParticles {
-      constructor(container) {
+      constructor(container, scale = 1) {
         this.container = container;
+        this.scale = scale;
+        this.baseWidth = 329;
+        this.baseHeight = 155;
+        this.width = this.baseWidth * scale;
+        this.height = this.baseHeight * scale;
         this.running = false;
         this.type = 'none';
         this.spawnInterval = null;
+      }
+
+      // Scale helper - multiplies value by scale factor
+      s(value) {
+        return value * this.scale;
       }
 
       setType(type) {
@@ -863,8 +1080,9 @@
       }
 
       prespawnParticles(type) {
-        const width = 329;
-        const height = 155;
+        const width = this.width;
+        const height = this.height;
+        const s = (v) => this.s(v);
 
         // Determine count and spawn based on type
         const configs = {
@@ -903,8 +1121,8 @@
           switch (type) {
             case 'clouds':
               particle.classList.add('cloud');
-              const cloudWidth = 100 + Math.random() * 150;
-              const cloudHeight = 50 + Math.random() * 70;
+              const cloudWidth = s(100 + Math.random() * 150);
+              const cloudHeight = s(50 + Math.random() * 70);
               particle.style.width = cloudWidth + 'px';
               particle.style.height = cloudHeight + 'px';
               particle.style.left = (progress * width) + 'px';
@@ -913,7 +1131,7 @@
               const cloudRemaining = width + cloudWidth - (progress * width);
               particle.animate([
                 { transform: 'translateX(0)', opacity: 0.5 },
-                { transform: `translateX(${cloudRemaining + 50}px)`, opacity: 0 }
+                { transform: `translateX(${cloudRemaining + s(50)}px)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (20000 + Math.random() * 15000),
                 easing: 'linear'
@@ -924,11 +1142,11 @@
               const isNight = currentTime === 'evening' || currentTime === 'night';
               if (isNight) {
                 particle.classList.add('star');
-                const starSize = 0.5 + Math.random() * 1;
+                const starSize = s(0.5 + Math.random() * 1);
                 particle.style.width = starSize + 'px';
                 particle.style.height = starSize + 'px';
                 particle.style.left = (Math.random() * width) + 'px';
-                particle.style.top = (5 + Math.random() * height * 0.35) + 'px';
+                particle.style.top = (s(5) + Math.random() * height * 0.35) + 'px';
                 const maxOpacity = 0.4 + Math.random() * 0.5;
                 particle.style.opacity = maxOpacity;
                 particle.animate([
@@ -942,12 +1160,13 @@
                 }).onfinish = () => particle.remove();
               } else {
                 particle.classList.add('ray');
+                // Keep ray width thin (don't scale) to preserve tapered effect
                 const rayWidth = 8 + Math.random() * 15;
-                const rayHeight = 100 + Math.random() * 60;
+                const rayHeight = s(100 + Math.random() * 60);
                 particle.style.width = rayWidth + 'px';
                 particle.style.height = rayHeight + 'px';
                 particle.style.left = Math.random() * width + 'px';
-                particle.style.top = '-20px';
+                particle.style.top = s(-20) + 'px';
                 const angle = 5 + Math.random() * 15;
                 particle.style.transform = `rotate(${angle}deg)`;
                 particle.style.opacity = 0.3 + Math.random() * 0.2;
@@ -967,11 +1186,11 @@
               particle.classList.add('rain');
               const rainIntensity = type === 'downpour' ? 1.8 : type === 'storm' ? 1.4 : 1;
               const windAngle = type === 'storm' ? 20 + Math.random() * 10 : 12 + Math.random() * 6;
-              const fallDistance = height - progress * height + 30;
+              const fallDistance = height - progress * height + s(30);
               const horizontalDrift = Math.tan(windAngle * Math.PI / 180) * fallDistance;
               particle.style.left = Math.random() * width + 'px';
               particle.style.top = (progress * height) + 'px';
-              particle.style.height = (18 + Math.random() * 14) * rainIntensity + 'px';
+              particle.style.height = s((18 + Math.random() * 14) * rainIntensity) + 'px';
               particle.style.transform = `rotate(${-windAngle}deg)`;
               particle.style.opacity = 0.6;
               particle.animate([
@@ -986,16 +1205,16 @@
             case 'snow':
             case 'blizzard':
               particle.classList.add('snowflake');
-              const snowSize = type === 'blizzard' ? 4 + Math.random() * 5 : 3 + Math.random() * 4;
+              const snowSize = s(type === 'blizzard' ? 4 + Math.random() * 5 : 3 + Math.random() * 4);
               particle.style.width = snowSize + 'px';
               particle.style.height = snowSize + 'px';
-              const drift = type === 'blizzard' ? 120 + Math.random() * 180 : 30 + Math.random() * 50;
+              const drift = s(type === 'blizzard' ? 120 + Math.random() * 180 : 30 + Math.random() * 50);
               particle.style.left = (Math.random() * width) + 'px';
               particle.style.top = (progress * height) + 'px';
               particle.style.opacity = 0.8;
               particle.animate([
                 { transform: `translate(0, 0) rotate(${progress * 360}deg)`, opacity: 0.8 },
-                { transform: `translate(${drift * (1 - progress)}px, ${height - progress * height + 20}px) rotate(360deg)`, opacity: 0.3 }
+                { transform: `translate(${drift * (1 - progress)}px, ${height - progress * height + s(20)}px) rotate(360deg)`, opacity: 0.3 }
               ], {
                 duration: (1 - progress) * (type === 'blizzard' ? 800 : 2500),
                 easing: 'ease-in-out'
@@ -1006,24 +1225,24 @@
             case 'mist':
               if (Math.random() < 0.8) {
                 particle.classList.add('fog');
-                const fogWidth = 40 + Math.random() * 80;
+                const fogWidth = s(40 + Math.random() * 80);
                 particle.style.width = fogWidth + 'px';
-                particle.style.height = (1 + Math.random() * 2) + 'px';
+                particle.style.height = s(1 + Math.random() * 2) + 'px';
                 particle.style.left = (progress * width) + 'px';
                 particle.style.top = Math.random() * height + 'px';
                 const peakOpacity = type === 'fog' ? 0.15 : 0.1;
                 particle.style.opacity = peakOpacity;
                 particle.animate([
                   { transform: 'translateX(0)', opacity: peakOpacity },
-                  { transform: `translateX(${width - progress * width + fogWidth + 50}px)`, opacity: 0 }
+                  { transform: `translateX(${width - progress * width + fogWidth + s(50)}px)`, opacity: 0 }
                 ], {
                   duration: (1 - progress) * (12000 + Math.random() * 8000),
                   easing: 'linear'
                 }).onfinish = () => particle.remove();
               } else {
                 particle.classList.add('fogbank');
-                const bankWidth = 80 + Math.random() * 120;
-                const bankHeight = 25 + Math.random() * 35;
+                const bankWidth = s(80 + Math.random() * 120);
+                const bankHeight = s(25 + Math.random() * 35);
                 particle.style.width = bankWidth + 'px';
                 particle.style.height = bankHeight + 'px';
                 particle.style.left = (progress * width) + 'px';
@@ -1032,7 +1251,7 @@
                 particle.style.opacity = peakOpacity;
                 particle.animate([
                   { transform: 'translateX(0) scale(1)', opacity: peakOpacity },
-                  { transform: `translateX(${width - progress * width + bankWidth + 30}px) scale(0.9)`, opacity: 0 }
+                  { transform: `translateX(${width - progress * width + bankWidth + s(30)}px) scale(0.9)`, opacity: 0 }
                 ], {
                   duration: (1 - progress) * (18000 + Math.random() * 10000),
                   easing: 'linear'
@@ -1043,7 +1262,7 @@
             case 'sand':
             case 'dust':
               particle.classList.add('sand');
-              const sandSize = type === 'sand' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2;
+              const sandSize = s(type === 'sand' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2);
               particle.style.width = sandSize + 'px';
               particle.style.height = (sandSize * 0.6) + 'px';
               particle.style.left = (progress * width) + 'px';
@@ -1051,7 +1270,7 @@
               particle.style.opacity = 0.6;
               particle.animate([
                 { transform: 'translateX(0)', opacity: 0.6 },
-                { transform: `translateX(${width - progress * width + 30}px)`, opacity: 0 }
+                { transform: `translateX(${width - progress * width + s(30)}px)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (type === 'sand' ? 500 : 800),
                 easing: 'linear'
@@ -1066,7 +1285,7 @@
               particle.style.opacity = 0.5;
               particle.animate([
                 { transform: 'translate(0, 0)', opacity: 0.5 },
-                { transform: `translate(${(Math.random() - 0.5) * 60}px, -${height - progress * height + 30}px)`, opacity: 0 }
+                { transform: `translate(${s((Math.random() - 0.5) * 60)}px, -${height - progress * height + s(30)}px)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (3000 + Math.random() * 2000),
                 easing: 'ease-out'
@@ -1075,7 +1294,7 @@
 
             case 'sparks':
               particle.classList.add('ember');
-              const emberSize = 3 + Math.random() * 4;
+              const emberSize = s(3 + Math.random() * 4);
               particle.style.width = emberSize + 'px';
               particle.style.height = emberSize + 'px';
               particle.style.left = Math.random() * width + 'px';
@@ -1083,7 +1302,7 @@
               particle.style.opacity = 0.8;
               particle.animate([
                 { transform: 'translate(0, 0) scale(0.8)', opacity: 0.8 },
-                { transform: `translate(${(Math.random() - 0.5) * 100}px, -${height - progress * height + 30}px) scale(0.2)`, opacity: 0 }
+                { transform: `translate(${s((Math.random() - 0.5) * 100)}px, -${height - progress * height + s(30)}px) scale(0.2)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (2500 + Math.random() * 1500),
                 easing: 'ease-out'
@@ -1091,15 +1310,15 @@
               break;
 
             case 'wind':
-              particle.style.width = 30 + Math.random() * 40 + 'px';
-              particle.style.height = '1px';
+              particle.style.width = s(30 + Math.random() * 40) + 'px';
+              particle.style.height = s(1) + 'px';
               particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)';
               particle.style.left = (progress * width) + 'px';
               particle.style.top = Math.random() * height + 'px';
               particle.style.opacity = 0.3;
               particle.animate([
                 { transform: 'translateX(0)', opacity: 0.3 },
-                { transform: `translateX(${width - progress * width + 100}px)`, opacity: 0 }
+                { transform: `translateX(${width - progress * width + s(100)}px)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (800 + Math.random() * 400),
                 easing: 'linear'
@@ -1107,15 +1326,15 @@
               break;
 
             case 'heat':
-              particle.style.width = '40px';
-              particle.style.height = '2px';
+              particle.style.width = s(40) + 'px';
+              particle.style.height = s(2) + 'px';
               particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,200,100,0.2), transparent)';
               particle.style.left = Math.random() * width + 'px';
-              particle.style.top = (height - progress * 60) + 'px';
+              particle.style.top = (height - progress * s(60)) + 'px';
               particle.style.opacity = 0.2;
               particle.animate([
                 { transform: 'translateY(0) scaleX(1)', opacity: 0.2 },
-                { transform: `translateY(-${60 - progress * 60}px) scaleX(0.8)`, opacity: 0 }
+                { transform: `translateY(-${s(60) - progress * s(60)}px) scaleX(0.8)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (2000 + Math.random() * 1000),
                 easing: 'ease-out'
@@ -1124,15 +1343,15 @@
 
             case 'ice':
               particle.classList.add('snow');
-              particle.style.width = '3px';
-              particle.style.height = '8px';
-              particle.style.borderRadius = '1px';
+              particle.style.width = s(3) + 'px';
+              particle.style.height = s(8) + 'px';
+              particle.style.borderRadius = s(1) + 'px';
               particle.style.left = Math.random() * width + 'px';
               particle.style.top = (progress * height) + 'px';
               particle.style.opacity = 0.7;
               particle.animate([
                 { transform: 'translateY(0) rotate(30deg)', opacity: 0.7 },
-                { transform: `translateY(${height - progress * height + 20}px) rotate(30deg)`, opacity: 0.3 }
+                { transform: `translateY(${height - progress * height + s(20)}px) rotate(30deg)`, opacity: 0.3 }
               ], {
                 duration: (1 - progress) * (500 + Math.random() * 200),
                 easing: 'linear'
@@ -1146,7 +1365,7 @@
               particle.style.opacity = 0.5;
               particle.animate([
                 { transform: 'translateY(0)', opacity: 0.5 },
-                { transform: `translateY(${height - progress * height + 20}px)`, opacity: 0.2 }
+                { transform: `translateY(${height - progress * height + s(20)}px)`, opacity: 0.2 }
               ], {
                 duration: (1 - progress) * (1500 + Math.random() * 500),
                 easing: 'ease-in'
@@ -1205,8 +1424,9 @@
         const particle = document.createElement('div');
         particle.className = 'particle';
 
-        const width = 329;
-        const height = 155;
+        const width = this.width;
+        const height = this.height;
+        const s = (v) => this.s(v);
 
         switch (this.type) {
           case 'rain':
@@ -1217,11 +1437,11 @@
               particle.classList.add('rain');
               const rainIntensity = this.type === 'downpour' ? 1.8 : this.type === 'storm' ? 1.4 : 1;
               const windAngle = this.type === 'storm' ? 20 + Math.random() * 10 : 12 + Math.random() * 6;
-              const totalFall = height + 30;
+              const totalFall = height + s(30);
               const rainDrift = Math.tan(windAngle * Math.PI / 180) * totalFall;
               particle.style.left = Math.random() * width + 'px';
-              particle.style.top = '-15px';
-              particle.style.height = (18 + Math.random() * 14) * rainIntensity + 'px';
+              particle.style.top = s(-15) + 'px';
+              particle.style.height = s((18 + Math.random() * 14) * rainIntensity) + 'px';
               particle.style.transform = `rotate(${-windAngle}deg)`;
               particle.style.opacity = 0.6 + Math.random() * 0.3;
               const speed = this.type === 'downpour' ? 250 : this.type === 'storm' ? 300 : 400;
@@ -1237,11 +1457,11 @@
               particle.classList.add('splash');
               const splashX = Math.random() * width;
               particle.style.left = splashX + 'px';
-              particle.style.top = (height - 15 + Math.random() * 10) + 'px';
+              particle.style.top = (height - s(15) + Math.random() * s(10)) + 'px';
               particle.animate([
                 { transform: 'scale(0) translateY(0)', opacity: 0.7 },
-                { transform: 'scale(1.5) translateY(-3px)', opacity: 0.5, offset: 0.3 },
-                { transform: 'scale(2) translateY(-1px)', opacity: 0 }
+                { transform: `scale(${this.scale * 1.5}) translateY(${s(-3)}px)`, opacity: 0.5, offset: 0.3 },
+                { transform: `scale(${this.scale * 2}) translateY(${s(-1)}px)`, opacity: 0 }
               ], {
                 duration: 300 + Math.random() * 100,
                 easing: 'ease-out'
@@ -1252,22 +1472,22 @@
           case 'snow':
           case 'blizzard':
             particle.classList.add('snowflake');
-            const snowSize = this.type === 'blizzard' ? 4 + Math.random() * 5 : 3 + Math.random() * 4;
+            const snowSize = s(this.type === 'blizzard' ? 4 + Math.random() * 5 : 3 + Math.random() * 4);
             particle.style.width = snowSize + 'px';
             particle.style.height = snowSize + 'px';
             particle.style.left = Math.random() * width + 'px';
-            particle.style.top = '-10px';
-            const drift = this.type === 'blizzard' ? 120 + Math.random() * 180 : 30 + Math.random() * 50;
+            particle.style.top = s(-10) + 'px';
+            const drift = s(this.type === 'blizzard' ? 120 + Math.random() * 180 : 30 + Math.random() * 50);
             const dur = this.type === 'blizzard' ? 800 + Math.random() * 400 : 2500 + Math.random() * 1500;
             // Add gentle wobble for realistic floating
-            const wobble1 = (Math.random() - 0.5) * 20;
-            const wobble2 = (Math.random() - 0.5) * 25;
+            const wobble1 = s((Math.random() - 0.5) * 20);
+            const wobble2 = s((Math.random() - 0.5) * 25);
             particle.animate([
               { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
               { transform: `translate(${drift * 0.2 + wobble1}px, ${height * 0.25}px) rotate(90deg)`, opacity: 0.9, offset: 0.25 },
               { transform: `translate(${drift * 0.5 + wobble2}px, ${height * 0.5}px) rotate(180deg)`, opacity: 0.85, offset: 0.5 },
               { transform: `translate(${drift * 0.8 + wobble1}px, ${height * 0.75}px) rotate(270deg)`, opacity: 0.7, offset: 0.75 },
-              { transform: `translate(${drift}px, ${height + 20}px) rotate(360deg)`, opacity: 0.3 }
+              { transform: `translate(${drift}px, ${height + s(20)}px) rotate(360deg)`, opacity: 0.3 }
             ], {
               duration: dur,
               easing: 'ease-in-out'
@@ -1279,18 +1499,18 @@
             // 80% wispy streaks, 20% larger fog banks - more quantity, less density
             if (Math.random() < 0.8) {
               particle.classList.add('fog');
-              const fogWidth = 40 + Math.random() * 80;
+              const fogWidth = s(40 + Math.random() * 80);
               particle.style.width = fogWidth + 'px';
-              particle.style.height = (1 + Math.random() * 2) + 'px';
+              particle.style.height = s(1 + Math.random() * 2) + 'px';
               particle.style.left = '-' + fogWidth + 'px';
               particle.style.top = Math.random() * height + 'px';
               const peakOpacity = this.type === 'fog' ? 0.15 : 0.1;
-              const yDrift = (Math.random() - 0.5) * 30;
+              const yDrift = s((Math.random() - 0.5) * 30);
               particle.animate([
                 { transform: 'translateX(0) translateY(0) scaleY(1)', opacity: 0 },
                 { transform: `translateX(${width * 0.3}px) translateY(${yDrift * 0.3}px) scaleY(1.2)`, opacity: peakOpacity, offset: 0.3 },
                 { transform: `translateX(${width * 0.6}px) translateY(${yDrift * 0.7}px) scaleY(0.9)`, opacity: peakOpacity * 0.8, offset: 0.6 },
-                { transform: `translateX(${width + fogWidth + 50}px) translateY(${yDrift}px) scaleY(1)`, opacity: 0 }
+                { transform: `translateX(${width + fogWidth + s(50)}px) translateY(${yDrift}px) scaleY(1)`, opacity: 0 }
               ], {
                 duration: 12000 + Math.random() * 8000,
                 easing: 'ease-in-out'
@@ -1298,8 +1518,8 @@
             } else {
               // Larger fog bank - more subtle
               particle.classList.add('fogbank');
-              const bankWidth = 80 + Math.random() * 120;
-              const bankHeight = 25 + Math.random() * 35;
+              const bankWidth = s(80 + Math.random() * 120);
+              const bankHeight = s(25 + Math.random() * 35);
               particle.style.width = bankWidth + 'px';
               particle.style.height = bankHeight + 'px';
               particle.style.left = '-' + bankWidth + 'px';
@@ -1308,7 +1528,7 @@
               particle.animate([
                 { transform: 'translateX(0) scale(0.8)', opacity: 0 },
                 { transform: `translateX(${width * 0.4}px) scale(1.1)`, opacity: peakOpacity, offset: 0.4 },
-                { transform: `translateX(${width + bankWidth + 30}px) scale(0.9)`, opacity: 0 }
+                { transform: `translateX(${width + bankWidth + s(30)}px) scale(0.9)`, opacity: 0 }
               ], {
                 duration: 18000 + Math.random() * 10000,
                 easing: 'ease-in-out'
@@ -1319,21 +1539,21 @@
           case 'sand':
           case 'dust':
             particle.classList.add('sand');
-            const sandSize = this.type === 'sand' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2;
+            const sandSize = s(this.type === 'sand' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2);
             particle.style.width = sandSize + 'px';
             particle.style.height = (sandSize * 0.6) + 'px';
-            particle.style.left = '-10px';
+            particle.style.left = s(-10) + 'px';
             particle.style.top = Math.random() * height + 'px';
             const sandSpeed = this.type === 'sand' ? 500 : 800;
-            const yWave1 = (Math.random() - 0.5) * 15;
-            const yWave2 = (Math.random() - 0.5) * 20;
-            const yWave3 = (Math.random() - 0.5) * 15;
+            const yWave1 = s((Math.random() - 0.5) * 15);
+            const yWave2 = s((Math.random() - 0.5) * 20);
+            const yWave3 = s((Math.random() - 0.5) * 15);
             particle.animate([
               { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
               { transform: `translate(${width * 0.25}px, ${yWave1}px) rotate(180deg)`, opacity: 0.75, offset: 0.25 },
               { transform: `translate(${width * 0.5}px, ${yWave2}px) rotate(360deg)`, opacity: 0.7, offset: 0.5 },
               { transform: `translate(${width * 0.75}px, ${yWave3}px) rotate(540deg)`, opacity: 0.5, offset: 0.75 },
-              { transform: `translate(${width + 30}px, ${(Math.random() - 0.5) * 25}px) rotate(720deg)`, opacity: 0 }
+              { transform: `translate(${width + s(30)}px, ${s((Math.random() - 0.5) * 25)}px) rotate(720deg)`, opacity: 0 }
             ], {
               duration: sandSpeed + Math.random() * 300,
               easing: 'ease-in-out'
@@ -1344,12 +1564,12 @@
           case 'smoke':
             particle.classList.add('ash');
             particle.style.left = Math.random() * width + 'px';
-            particle.style.top = height + 10 + 'px';
-            const driftX = (Math.random() - 0.5) * 60;
+            particle.style.top = height + s(10) + 'px';
+            const driftX = s((Math.random() - 0.5) * 60);
             particle.animate([
               { transform: 'translate(0, 0)', opacity: 0 },
               { transform: `translate(${driftX * 0.3}px, -${height * 0.3}px)`, opacity: 0.6, offset: 0.3 },
-              { transform: `translate(${driftX}px, -${height + 30}px)`, opacity: 0 }
+              { transform: `translate(${driftX}px, -${height + s(30)}px)`, opacity: 0 }
             ], {
               duration: 3000 + Math.random() * 2000,
               easing: 'ease-out'
@@ -1360,19 +1580,19 @@
             // 60% glowing embers, 40% quick sparks
             if (Math.random() < 0.6) {
               particle.classList.add('ember');
-              const emberSize = 3 + Math.random() * 4;
+              const emberSize = s(3 + Math.random() * 4);
               particle.style.width = emberSize + 'px';
               particle.style.height = emberSize + 'px';
               particle.style.left = Math.random() * width + 'px';
-              particle.style.top = height + 5 + 'px';
-              const emberDriftX = (Math.random() - 0.5) * 100;
-              const wobbleX = (Math.random() - 0.5) * 30;
+              particle.style.top = height + s(5) + 'px';
+              const emberDriftX = s((Math.random() - 0.5) * 100);
+              const wobbleX = s((Math.random() - 0.5) * 30);
               particle.animate([
                 { transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
                 { transform: `translate(${emberDriftX * 0.3 + wobbleX}px, -${height * 0.3}px) scale(1)`, opacity: 1, offset: 0.2 },
                 { transform: `translate(${emberDriftX * 0.6 - wobbleX}px, -${height * 0.6}px) scale(0.9)`, opacity: 0.9, offset: 0.5 },
                 { transform: `translate(${emberDriftX * 0.8 + wobbleX}px, -${height * 0.85}px) scale(0.6)`, opacity: 0.6, offset: 0.8 },
-                { transform: `translate(${emberDriftX}px, -${height + 30}px) scale(0.2)`, opacity: 0 }
+                { transform: `translate(${emberDriftX}px, -${height + s(30)}px) scale(0.2)`, opacity: 0 }
               ], {
                 duration: 2500 + Math.random() * 1500,
                 easing: 'ease-out'
@@ -1380,12 +1600,12 @@
             } else {
               particle.classList.add('spark');
               particle.style.left = Math.random() * width + 'px';
-              particle.style.top = height + 5 + 'px';
-              const sparkDriftX = (Math.random() - 0.5) * 60;
+              particle.style.top = height + s(5) + 'px';
+              const sparkDriftX = s((Math.random() - 0.5) * 60);
               particle.animate([
                 { transform: 'translate(0, 0) scale(1)', opacity: 0.9 },
                 { transform: `translate(${sparkDriftX * 0.4}px, -${height * 0.4}px) scale(0.7)`, opacity: 1, offset: 0.4 },
-                { transform: `translate(${sparkDriftX}px, -${height + 10}px) scale(0.2)`, opacity: 0 }
+                { transform: `translate(${sparkDriftX}px, -${height + s(10)}px) scale(0.2)`, opacity: 0 }
               ], {
                 duration: 1000 + Math.random() * 600,
                 easing: 'ease-out'
@@ -1400,11 +1620,11 @@
             if (isNightTime) {
               // Twinkling star - small and distant
               particle.classList.add('star');
-              const starSize = 0.5 + Math.random() * 1;
+              const starSize = s(0.5 + Math.random() * 1);
               particle.style.width = starSize + 'px';
               particle.style.height = starSize + 'px';
               particle.style.left = (Math.random() * width) + 'px';
-              particle.style.top = (5 + Math.random() * height * 0.35) + 'px';
+              particle.style.top = (s(5) + Math.random() * height * 0.35) + 'px';
               const twinkleDuration = 4000 + Math.random() * 4000;
               const maxOpacity = 0.4 + Math.random() * 0.5;
               particle.animate([
@@ -1422,19 +1642,19 @@
               if (rand < 0.15) {
                 // Subtle dust particles
                 particle.classList.add('sundust');
-                const dustSize = 1 + Math.random() * 1.5;
+                const dustSize = s(1 + Math.random() * 1.5);
                 particle.style.width = dustSize + 'px';
                 particle.style.height = dustSize + 'px';
-                const dustX = 30 + Math.random() * (width - 60);
-                const dustY = 20 + Math.random() * (height - 50);
+                const dustX = s(30) + Math.random() * (width - s(60));
+                const dustY = s(20) + Math.random() * (height - s(50));
                 particle.style.left = dustX + 'px';
                 particle.style.top = dustY + 'px';
-                const driftX = (Math.random() - 0.5) * 15;
-                const driftY = -5 - Math.random() * 10;
+                const driftX2 = s((Math.random() - 0.5) * 15);
+                const driftY = s(-5 - Math.random() * 10);
                 particle.animate([
                   { transform: 'translate(0, 0)', opacity: 0 },
-                  { transform: `translate(${driftX * 0.5}px, ${driftY * 0.5}px)`, opacity: 0.4, offset: 0.4 },
-                  { transform: `translate(${driftX}px, ${driftY}px)`, opacity: 0 }
+                  { transform: `translate(${driftX2 * 0.5}px, ${driftY * 0.5}px)`, opacity: 0.4, offset: 0.4 },
+                  { transform: `translate(${driftX2}px, ${driftY}px)`, opacity: 0 }
                 ], {
                   duration: 4000 + Math.random() * 2000,
                   easing: 'ease-in-out'
@@ -1442,12 +1662,13 @@
               } else {
                 // Dramatic god ray
                 particle.classList.add('ray');
+                // Keep ray width thin (don't scale) to preserve tapered effect
                 const rayWidth = 8 + Math.random() * 15;
-                const rayHeight = 100 + Math.random() * 60;
+                const rayHeight = s(100 + Math.random() * 60);
                 particle.style.width = rayWidth + 'px';
                 particle.style.height = rayHeight + 'px';
                 particle.style.left = Math.random() * width + 'px';
-                particle.style.top = '-20px';
+                particle.style.top = s(-20) + 'px';
                 const angle = 5 + Math.random() * 15;
                 particle.style.transform = `rotate(${angle}deg)`;
                 particle.animate([
@@ -1466,8 +1687,8 @@
           case 'clouds':
             // Slow drifting clouds
             particle.classList.add('cloud');
-            const cloudWidth = 100 + Math.random() * 150;
-            const cloudHeight = 50 + Math.random() * 70;
+            const cloudWidth = s(100 + Math.random() * 150);
+            const cloudHeight = s(50 + Math.random() * 70);
             particle.style.width = cloudWidth + 'px';
             particle.style.height = cloudHeight + 'px';
             particle.style.left = -cloudWidth + 'px';
@@ -1476,7 +1697,7 @@
               { transform: 'translateX(0)', opacity: 0 },
               { transform: `translateX(${width * 0.15}px)`, opacity: 0.5, offset: 0.1 },
               { transform: `translateX(${width * 0.85}px)`, opacity: 0.5, offset: 0.9 },
-              { transform: `translateX(${width + cloudWidth + 50}px)`, opacity: 0 }
+              { transform: `translateX(${width + cloudWidth + s(50)}px)`, opacity: 0 }
             ], {
               duration: 20000 + Math.random() * 15000,
               easing: 'linear'
@@ -1484,15 +1705,15 @@
             break;
 
           case 'wind':
-            particle.style.width = 30 + Math.random() * 40 + 'px';
-            particle.style.height = '1px';
+            particle.style.width = s(30 + Math.random() * 40) + 'px';
+            particle.style.height = s(1) + 'px';
             particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)';
-            particle.style.left = '-50px';
+            particle.style.left = s(-50) + 'px';
             particle.style.top = Math.random() * height + 'px';
             particle.animate([
               { transform: 'translateX(0)', opacity: 0 },
-              { transform: 'translateX(100px)', opacity: 0.4, offset: 0.3 },
-              { transform: `translateX(${width + 100}px)`, opacity: 0 }
+              { transform: `translateX(${s(100)}px)`, opacity: 0.4, offset: 0.3 },
+              { transform: `translateX(${width + s(100)}px)`, opacity: 0 }
             ], {
               duration: 800 + Math.random() * 400,
               easing: 'linear'
@@ -1500,15 +1721,15 @@
             break;
 
           case 'heat':
-            particle.style.width = '40px';
-            particle.style.height = '2px';
+            particle.style.width = s(40) + 'px';
+            particle.style.height = s(2) + 'px';
             particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,200,100,0.2), transparent)';
             particle.style.left = Math.random() * width + 'px';
             particle.style.top = height + 'px';
             particle.animate([
               { transform: 'translateY(0) scaleX(1)', opacity: 0 },
-              { transform: 'translateY(-30px) scaleX(1.2)', opacity: 0.3, offset: 0.5 },
-              { transform: 'translateY(-60px) scaleX(0.8)', opacity: 0 }
+              { transform: `translateY(${s(-30)}px) scaleX(1.2)`, opacity: 0.3, offset: 0.5 },
+              { transform: `translateY(${s(-60)}px) scaleX(0.8)`, opacity: 0 }
             ], {
               duration: 2000 + Math.random() * 1000,
               easing: 'ease-out'
@@ -1517,14 +1738,14 @@
 
           case 'ice':
             particle.classList.add('snow');
-            particle.style.width = '3px';
-            particle.style.height = '8px';
-            particle.style.borderRadius = '1px';
+            particle.style.width = s(3) + 'px';
+            particle.style.height = s(8) + 'px';
+            particle.style.borderRadius = s(1) + 'px';
             particle.style.left = Math.random() * width + 'px';
-            particle.style.top = '-10px';
+            particle.style.top = s(-10) + 'px';
             particle.animate([
               { transform: 'translateY(0) rotate(30deg)', opacity: 0.8 },
-              { transform: `translateY(${height + 20}px) rotate(30deg)`, opacity: 0.4 }
+              { transform: `translateY(${height + s(20)}px) rotate(30deg)`, opacity: 0.4 }
             ], {
               duration: 500 + Math.random() * 200,
               easing: 'linear'
@@ -1534,11 +1755,11 @@
           case 'drip':
             particle.classList.add('drip');
             particle.style.left = Math.random() * width + 'px';
-            particle.style.top = '-8px';
+            particle.style.top = s(-8) + 'px';
             particle.animate([
               { transform: 'translateY(0)', opacity: 0 },
-              { transform: 'translateY(20px)', opacity: 0.6, offset: 0.3 },
-              { transform: `translateY(${height + 20}px)`, opacity: 0.3 }
+              { transform: `translateY(${s(20)}px)`, opacity: 0.6, offset: 0.3 },
+              { transform: `translateY(${height + s(20)}px)`, opacity: 0.3 }
             ], {
               duration: 1500 + Math.random() * 500,
               easing: 'ease-in'
@@ -1665,6 +1886,319 @@
         document.getElementById('weatherSelect').value = currentWeather;
         updateWidget();
       });
+
+    }
+
+    // ===== FULLSCREEN MODE =====
+    let isFullscreen = false;
+    let fullscreenWidget = null;
+    let fullscreenParticleSystem = null;
+    let uiIdleTimer = null;
+
+    // Fidelity mode for fullscreen - 2x gives best balance of quality and performance
+    let fidelityMode = '2x';
+    let currentFullscreenWidth = 329; // Track widget dimensions for resize
+    let currentFullscreenHeight = 155;
+
+    function showFullscreenUI() {
+      const container = document.getElementById('fullscreenContainer');
+      container.classList.add('ui-visible');
+
+      // Clear existing timer
+      if (uiIdleTimer) clearTimeout(uiIdleTimer);
+
+      // Hide after 1.5 seconds of idle (slightly longer than 1s feels better)
+      uiIdleTimer = setTimeout(() => {
+        container.classList.remove('ui-visible');
+      }, 1500);
+    }
+
+    function hideFullscreenUI() {
+      const container = document.getElementById('fullscreenContainer');
+      container.classList.remove('ui-visible');
+      if (uiIdleTimer) {
+        clearTimeout(uiIdleTimer);
+        uiIdleTimer = null;
+      }
+    }
+
+    function calculateScale(baseWidth = 329, baseHeight = 155) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // Use Math.max to FILL/COVER the viewport (crops edges rather than letterboxing)
+      return Math.max(vw / baseWidth, vh / baseHeight);
+    }
+
+    function enterFullscreen() {
+      if (isFullscreen) return;
+
+      const container = document.getElementById('fullscreenContainer');
+      const originalWidget = document.getElementById('weatherWidget');
+
+      // Get original widget's position for zoom animation
+      const rect = originalWidget.getBoundingClientRect();
+      originalWidgetRect = rect; // Store for zoom out animation
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Determine render scale based on fidelity mode
+      let renderScale = 1; // How much larger to render the widget
+      let particleScale = 1; // Scale for particle system
+      let widgetWidth = 329;
+      let widgetHeight = 155;
+
+      if (fidelityMode === '2x') {
+        // Render at 2x size, particles at 2x
+        renderScale = 2;
+        particleScale = 2;
+        widgetWidth = 658;
+        widgetHeight = 310;
+      } else if (fidelityMode === 'native') {
+        // Render at near-viewport size
+        // Calculate the scale needed to fill viewport
+        const fillScale = Math.max(vw / 329, vh / 155);
+        // Use that scale to determine native render size (capped at reasonable maximum)
+        renderScale = Math.min(fillScale, 8); // Cap at 8x to avoid insane sizes
+        particleScale = renderScale;
+        widgetWidth = Math.round(329 * renderScale);
+        widgetHeight = Math.round(155 * renderScale);
+      }
+
+      // Clone the widget
+      fullscreenWidget = originalWidget.cloneNode(true);
+      fullscreenWidget.id = 'fullscreenWidget';
+
+      // For higher fidelity modes, resize the widget element
+      if (renderScale > 1) {
+        fullscreenWidget.style.width = widgetWidth + 'px';
+        fullscreenWidget.style.height = widgetHeight + 'px';
+        // Scale internal particle container
+        const fsParticlesContainer = fullscreenWidget.querySelector('.weather-particles');
+        fsParticlesContainer.style.width = widgetWidth + 'px';
+        fsParticlesContainer.style.height = widgetHeight + 'px';
+      }
+
+      // Clear any existing widget in container
+      const existingWidget = container.querySelector('.widget');
+      if (existingWidget) existingWidget.remove();
+
+      container.appendChild(fullscreenWidget);
+
+      // Create new particle system for fullscreen widget with appropriate scale
+      const fsParticles = fullscreenWidget.querySelector('.weather-particles');
+      fsParticles.innerHTML = ''; // Clear cloned static particles
+      fullscreenParticleSystem = new WeatherParticles(fsParticles, particleScale);
+
+      // Set same weather type
+      const weatherInfo = WEATHER_INFO[currentWeather] || { particles: 'none' };
+      fullscreenParticleSystem.setType(weatherInfo.particles);
+      fullscreenParticleSystem.start();
+
+      // Calculate final transform scale (how much to scale the rendered widget to fill viewport)
+      const finalScale = calculateScale(widgetWidth, widgetHeight);
+
+      // Store dimensions for resize handler
+      currentFullscreenWidth = widgetWidth;
+      currentFullscreenHeight = widgetHeight;
+
+      // Calculate starting position (where the original widget is)
+      // The widget in fullscreen container is centered, so we need to offset from center
+      const startX = rect.left + rect.width / 2 - vw / 2;
+      const startY = rect.top + rect.height / 2 - vh / 2;
+
+      // Start with widget at original position and scale 1
+      container.classList.add('zooming');
+      fullscreenWidget.style.transform = `translate(${startX}px, ${startY}px) scale(1)`;
+      fullscreenWidget.style.borderRadius = '20px';
+
+      // Populate the fullscreen UI overlay (weatherInfo already declared above)
+      const biomeIconData = BIOME_ICONS[currentBiome] || BIOME_ICONS.forest;
+      const fsUI = document.getElementById('fullscreenUI');
+
+      // Reset the animations by removing and re-adding
+      fsUI.style.animation = 'none';
+      const hint = container.querySelector('.fullscreen-hint');
+      if (hint) hint.style.animation = 'none';
+      fsUI.offsetHeight; // Trigger reflow
+      fsUI.style.animation = '';
+      if (hint) hint.style.animation = '';
+
+      document.getElementById('fsTimeIcon').innerHTML = TIME_ICONS[currentTime] || TIME_ICONS.morning;
+      document.getElementById('fsTimeLabel').textContent = currentTime.toUpperCase();
+      document.getElementById('fsBiomeIcon').setAttribute('viewBox', biomeIconData.viewBox);
+      document.getElementById('fsBiomeIcon').innerHTML = biomeIconData.path;
+      document.getElementById('fsBiomeLabel').textContent = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
+      document.getElementById('fsWeatherName').textContent = weatherInfo.name;
+      document.getElementById('fsWeatherDetail').textContent = weatherInfo.detail;
+      document.getElementById('fsTempFeel').textContent = getTempFeel();
+      document.getElementById('fsWindSpeed').textContent = getWindSpeed();
+
+      // Show container
+      container.classList.add('active');
+
+      // Request fullscreen API
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+
+      // Trigger zoom animation after a frame
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.classList.remove('zooming');
+          fullscreenWidget.style.transform = `translate(0, 0) scale(${finalScale})`;
+          fullscreenWidget.style.borderRadius = '0';
+        });
+      });
+
+      isFullscreen = true;
+
+      // Start storm lightning if needed
+      if (currentWeather === 'storm' || currentWeather === 'ice_storm') {
+        fullscreenStormInterval = setInterval(() => {
+          if (Math.random() < 0.3) {
+            const fsLightning = fullscreenWidget.querySelector('.lightning-flash');
+            if (fsLightning) {
+              fsLightning.classList.add('active');
+              setTimeout(() => fsLightning.classList.remove('active'), 150);
+            }
+          }
+        }, 2000);
+      }
+
+      // Show UI initially, then it will auto-hide after idle
+      showFullscreenUI();
+    }
+
+    let fullscreenStormInterval = null;
+
+    // Store original widget position for zoom out animation
+    let originalWidgetRect = null;
+
+    function exitFullscreen() {
+      if (!isFullscreen) return;
+
+      // Hide UI and clear timer
+      hideFullscreenUI();
+
+      const container = document.getElementById('fullscreenContainer');
+      const originalWidget = document.getElementById('weatherWidget');
+
+      // Exit browser fullscreen first (if active)
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+
+      // Clear storm interval
+      if (fullscreenStormInterval) {
+        clearInterval(fullscreenStormInterval);
+        fullscreenStormInterval = null;
+      }
+
+      // Animate zoom out
+      if (fullscreenWidget && originalWidgetRect) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const rect = originalWidget.getBoundingClientRect();
+        const endX = rect.left + rect.width / 2 - vw / 2;
+        const endY = rect.top + rect.height / 2 - vh / 2;
+
+        // Animate back to original position
+        fullscreenWidget.style.transform = `translate(${endX}px, ${endY}px) scale(1)`;
+        fullscreenWidget.style.borderRadius = '20px';
+
+        // Wait for animation to complete, then clean up
+        setTimeout(() => {
+          // Stop fullscreen particle system
+          if (fullscreenParticleSystem) {
+            fullscreenParticleSystem.stop();
+            fullscreenParticleSystem = null;
+          }
+
+          // Remove cloned widget
+          if (fullscreenWidget) {
+            fullscreenWidget.remove();
+            fullscreenWidget = null;
+          }
+
+          container.classList.remove('active');
+        }, 600); // Match the transition duration
+      } else {
+        // Fallback: just remove immediately
+        if (fullscreenParticleSystem) {
+          fullscreenParticleSystem.stop();
+          fullscreenParticleSystem = null;
+        }
+        if (fullscreenWidget) {
+          fullscreenWidget.remove();
+          fullscreenWidget = null;
+        }
+        container.classList.remove('active');
+      }
+
+      isFullscreen = false;
+    }
+
+    function handleResize() {
+      if (!isFullscreen || !fullscreenWidget) return;
+      const scale = calculateScale(currentFullscreenWidth, currentFullscreenHeight);
+      fullscreenWidget.style.transform = `translate(0, 0) scale(${scale})`;
+    }
+
+    function setupFullscreen() {
+      const widget = document.getElementById('weatherWidget');
+      const container = document.getElementById('fullscreenContainer');
+
+      // Click widget to enter fullscreen
+      widget.addEventListener('click', (e) => {
+        // Don't trigger on control panel interactions
+        if (e.target.closest('.control-panel')) return;
+        enterFullscreen();
+      });
+
+      // Click anywhere in fullscreen to exit
+      container.addEventListener('click', () => {
+        exitFullscreen();
+      });
+
+      // Show UI on mouse/touch movement
+      container.addEventListener('mousemove', () => {
+        if (isFullscreen) showFullscreenUI();
+      });
+      container.addEventListener('touchstart', () => {
+        if (isFullscreen) showFullscreenUI();
+      });
+
+      // Handle Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFullscreen) {
+          exitFullscreen();
+        }
+      });
+
+      // Handle fullscreen API exit (e.g., pressing Escape in native fullscreen)
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && isFullscreen) {
+          exitFullscreen();
+        }
+      });
+      document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.webkitFullscreenElement && isFullscreen) {
+          exitFullscreen();
+        }
+      });
+
+      // Handle resize/orientation change
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', () => {
+        // Small delay to let orientation finish
+        setTimeout(handleResize, 100);
+      });
     }
 
     // Initialize
@@ -1673,6 +2207,7 @@
       particleSystem = new WeatherParticles(document.getElementById('particles'));
 
       setupControls();
+      setupFullscreen();
       populateWeatherOptions();
 
       // Start loaded state
