@@ -560,7 +560,7 @@
     .hotkey-hint {
       font-size: 10px;
       color: rgba(255, 255, 255, 0.25);
-      margin-left: 6px;
+      margin-left: auto;
       font-weight: 400;
     }
 
@@ -635,6 +635,7 @@
     /* Randomize button - small inline version */
     .randomize-btn {
       padding: 3px 8px;
+      margin-left: 4px;
       background: rgba(255, 255, 255, 0.2);
       border: none;
       border-radius: 4px;
@@ -973,8 +974,8 @@
     <div class="control-group">
       <div class="control-label">
         <span>Weather</span>
+        <button class="randomize-btn" id="randomizeBtn">Randomize</button>
         <span class="hotkey-hint">&uarr; &darr;</span>
-        <button class="randomize-btn" id="randomizeBtn">Random</button>
       </div>
       <select class="control-select" id="weatherSelect">
         <!-- Options populated dynamically based on biome -->
@@ -1974,36 +1975,101 @@
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
         const weatherOptions = BIOME_WEATHER[currentBiome];
+        let changed = false;
 
         if (e.key === 'ArrowLeft') {
           // Previous time (with wrap)
           const currentIndex = TIMES.indexOf(currentTime);
           currentTime = TIMES[(currentIndex - 1 + TIMES.length) % TIMES.length];
-          updateWidget();
+          changed = true;
           e.preventDefault();
         } else if (e.key === 'ArrowRight') {
           // Next time (with wrap)
           const currentIndex = TIMES.indexOf(currentTime);
           currentTime = TIMES[(currentIndex + 1) % TIMES.length];
-          updateWidget();
+          changed = true;
           e.preventDefault();
         } else if (e.key === 'ArrowUp') {
           // Previous weather (with wrap)
           const currentIndex = weatherOptions.indexOf(currentWeather);
           currentWeather = weatherOptions[(currentIndex - 1 + weatherOptions.length) % weatherOptions.length];
           document.getElementById('weatherSelect').value = currentWeather;
-          updateWidget();
+          changed = true;
           e.preventDefault();
         } else if (e.key === 'ArrowDown') {
           // Next weather (with wrap)
           const currentIndex = weatherOptions.indexOf(currentWeather);
           currentWeather = weatherOptions[(currentIndex + 1) % weatherOptions.length];
           document.getElementById('weatherSelect').value = currentWeather;
-          updateWidget();
+          changed = true;
           e.preventDefault();
+        }
+
+        if (changed) {
+          updateWidget();
+          // Also update fullscreen if active
+          if (isFullscreen && fullscreenWidget) {
+            updateFullscreenWidget();
+          }
         }
       });
 
+    }
+
+    // Update fullscreen widget when time/weather changes via hotkeys
+    function updateFullscreenWidget() {
+      if (!fullscreenWidget || !fullscreenParticleSystem) return;
+
+      const container = document.getElementById('fullscreenContainer');
+      const weatherInfo = WEATHER_INFO[currentWeather] || { name: currentWeather, detail: '', particles: 'none' };
+
+      // Update widget classes
+      fullscreenWidget.className = fullscreenWidget.className
+        .replace(/biome-\w+/g, '')
+        .replace(/time-\w+/g, '')
+        .trim();
+      fullscreenWidget.classList.add(`biome-${currentBiome}`, `time-${currentTime}`);
+
+      // Update container biome class for accent colors
+      container.className = container.className.replace(/biome-\w+/g, '').trim();
+      container.classList.add(`biome-${currentBiome}`);
+
+      // Update fullscreen UI overlay
+      document.getElementById('fsTimeIcon').innerHTML = TIME_ICONS[currentTime] || TIME_ICONS.morning;
+      document.getElementById('fsTimeLabel').textContent = currentTime.toUpperCase();
+      document.getElementById('fsWeatherName').textContent = weatherInfo.name;
+      document.getElementById('fsWeatherDetail').textContent = weatherInfo.detail;
+      document.getElementById('fsTempFeel').textContent = getTempFeel();
+      document.getElementById('fsWindSpeed').textContent = getWindSpeed();
+
+      // Update particle system
+      if (weatherInfo.particles === 'rays') {
+        // Force restart to switch between sun rays and stars based on time
+        fullscreenParticleSystem.setType('none');
+        fullscreenParticleSystem.setType('rays');
+      } else {
+        fullscreenParticleSystem.setType(weatherInfo.particles);
+      }
+
+      // Handle storm lightning
+      if (fullscreenStormInterval) {
+        clearInterval(fullscreenStormInterval);
+        fullscreenStormInterval = null;
+      }
+      if (currentWeather === 'storm' || currentWeather === 'ice_storm') {
+        fullscreenStormInterval = setInterval(() => {
+          if (Math.random() < 0.3) {
+            const fsLightning = fullscreenWidget.querySelector('.lightning-flash');
+            if (fsLightning) {
+              fsLightning.classList.add('active');
+              setTimeout(() => fsLightning.classList.remove('active'), 150);
+            }
+          }
+        }, 2000);
+      }
+
+      // Show UI briefly when changing
+      showFullscreenUI();
     }
 
     // ===== FULLSCREEN MODE =====
