@@ -315,16 +315,22 @@
       padding: 10px 14px;
     }
 
-    .temp-feel {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 2px;
+    .wind-display {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .wind-speed {
-      font-size: 11px;
-      color: var(--text-tertiary);
+    .wind-arrow {
+      font-size: 16px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .wind-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
     }
 
     /* Time icon in header (SVG) */
@@ -801,15 +807,20 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
 
-    .fullscreen-ui-temp {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 2px;
+    .fullscreen-ui-wind {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .fullscreen-ui-wind {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.6);
+    .fullscreen-ui-wind-arrow {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .fullscreen-ui-wind-text {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     /* Fullscreen API styles */
@@ -879,8 +890,10 @@
           <div class="fullscreen-ui-weather-detail" id="fsWeatherDetail">Calm conditions</div>
         </div>
         <div class="fullscreen-ui-conditions">
-          <div class="fullscreen-ui-temp" id="fsTempFeel">Mild</div>
-          <div class="fullscreen-ui-wind" id="fsWindSpeed">Calm</div>
+          <div class="fullscreen-ui-wind">
+            <span class="fullscreen-ui-wind-arrow" id="fsWindArrow"></span>
+            <span class="fullscreen-ui-wind-text" id="fsWindText">Calm</span>
+          </div>
         </div>
       </div>
     </div>
@@ -910,11 +923,13 @@
     <div class="widget-bottom">
       <div class="bottom-left">
         <div class="weather-name" id="weatherName">Partly Cloudy</div>
-        <div class="weather-detail" id="weatherDetail">Mild breeze</div>
+        <div class="weather-detail" id="weatherDetail">Mild and still</div>
       </div>
       <div class="bottom-right">
-        <div class="temp-feel" id="tempFeel">Pleasant</div>
-        <div class="wind-speed" id="windSpeed">Light breeze</div>
+        <div class="wind-display">
+          <span class="wind-arrow" id="windArrow"></span>
+          <span class="wind-text" id="windText">Calm</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1097,19 +1112,91 @@
       return TEMP_SCALE[finalIndex].charAt(0).toUpperCase() + TEMP_SCALE[finalIndex].slice(1);
     }
 
-    // Wind descriptions based on weather
-    const WIND_LEVELS = {
-      clear: 'Calm', cloudy: 'Light breeze', rain: 'Gusty', fog: 'Still',
-      storm: 'Strong winds', windy: 'Howling winds', hot: 'Calm',
-      sandstorm: 'Violent gusts', snow: 'Light breeze', blizzard: 'Gale force',
-      foggy: 'Still', humid: 'Stagnant', downpour: 'Heavy gusts', misty: 'Gentle',
-      ash: 'Swirling', smoke: 'Light drift', fiery: 'Intense drafts',
-      ice_storm: 'Biting winds', dry: 'Calm', dust: 'Breezy',
-      dark: 'Still', damp: 'Stagnant', dripping: 'Still'
+    // Wind speed ranges by weather (min, max in "fictional" units)
+    const WIND_SPEEDS = {
+      clear: [0, 5], cloudy: [5, 15], rain: [10, 25], fog: [0, 5],
+      storm: [25, 50], windy: [20, 40], hot: [0, 10],
+      sandstorm: [30, 60], snow: [5, 15], blizzard: [35, 65],
+      foggy: [0, 3], humid: [0, 5], downpour: [15, 35], misty: [0, 8],
+      ash: [5, 20], smoke: [3, 12], fiery: [10, 25],
+      ice_storm: [25, 45], dry: [0, 8], dust: [10, 25],
+      dark: [0, 5], damp: [0, 3], dripping: [0, 2]
     };
 
-    function getWindSpeed() {
-      return WIND_LEVELS[currentWeather] || 'Light breeze';
+    // Wind directions with angles (degrees from north, clockwise)
+    const WIND_DIRECTIONS = [
+      { name: 'N', angle: 0, arrow: '↓' },
+      { name: 'NE', angle: 45, arrow: '↙' },
+      { name: 'E', angle: 90, arrow: '←' },
+      { name: 'SE', angle: 135, arrow: '↖' },
+      { name: 'S', angle: 180, arrow: '↑' },
+      { name: 'SW', angle: 225, arrow: '↗' },
+      { name: 'W', angle: 270, arrow: '→' },
+      { name: 'NW', angle: 315, arrow: '↘' }
+    ];
+
+    // Biome-specific wind direction tendencies (weighted)
+    const BIOME_WIND_TENDENCIES = {
+      forest: ['W', 'SW', 'NW', 'W'],  // Westerlies common
+      desert: ['E', 'NE', 'SE', 'E'],   // Trade winds
+      tundra: ['N', 'NE', 'NW', 'N'],   // Arctic winds
+      swamp: ['S', 'SE', 'SW', 'S'],    // Southern humid
+      mountains: ['W', 'NW', 'W', 'SW'], // Mountain winds
+      plains: ['W', 'SW', 'S', 'NW'],   // Variable
+      coast: ['W', 'SW', 'NW', 'W'],    // Sea breeze
+      jungle: ['E', 'NE', 'SE', 'E'],   // Trade winds
+      volcanic: ['N', 'S', 'E', 'W'],   // Variable thermals
+      arctic: ['N', 'NE', 'NW', 'N'],   // Polar winds
+      savanna: ['E', 'NE', 'SE', 'E'],  // Trade winds
+      cavern: ['N', 'S', 'E', 'W']      // Variable drafts (weak)
+    };
+
+    // Current wind state
+    let currentWindDirection = null;
+    let currentWindSpeed = 0;
+
+    function generateWind() {
+      // Pick direction based on biome tendency
+      const tendencies = BIOME_WIND_TENDENCIES[currentBiome] || ['N', 'E', 'S', 'W'];
+      const dirName = tendencies[Math.floor(Math.random() * tendencies.length)];
+      currentWindDirection = WIND_DIRECTIONS.find(d => d.name === dirName);
+
+      // Generate speed based on weather
+      const [minSpeed, maxSpeed] = WIND_SPEEDS[currentWeather] || [0, 10];
+      currentWindSpeed = Math.floor(minSpeed + Math.random() * (maxSpeed - minSpeed));
+    }
+
+    function getWindDisplay() {
+      if (!currentWindDirection || currentWindSpeed < 3) {
+        return { text: 'Calm', arrow: '' };
+      }
+      let speedDesc;
+      if (currentWindSpeed < 10) speedDesc = 'Light';
+      else if (currentWindSpeed < 20) speedDesc = 'Moderate';
+      else if (currentWindSpeed < 35) speedDesc = 'Strong';
+      else if (currentWindSpeed < 50) speedDesc = 'Severe';
+      else speedDesc = 'Extreme';
+
+      return {
+        text: `${speedDesc} ${currentWindDirection.name}`,
+        arrow: currentWindDirection.arrow
+      };
+    }
+
+    function getTempDescription() {
+      const temp = getTempFeel().toLowerCase();
+      const wind = getWindDisplay();
+
+      // Combine temp with wind feel
+      if (currentWindSpeed < 5) {
+        return `${temp.charAt(0).toUpperCase() + temp.slice(1)} and still`;
+      } else if (currentWindSpeed < 15) {
+        return `${temp.charAt(0).toUpperCase() + temp.slice(1)} with a breeze`;
+      } else if (currentWindSpeed < 30) {
+        return `${temp.charAt(0).toUpperCase() + temp.slice(1)} and gusty`;
+      } else {
+        return `${temp.charAt(0).toUpperCase() + temp.slice(1)}, blustery`;
+      }
     }
 
 
@@ -1892,9 +1979,12 @@
       document.getElementById('timeIcon').innerHTML = TIME_ICONS[currentTime] || TIME_ICONS.morning;
       document.getElementById('timeLabel').textContent = currentTime.toUpperCase();
 
-      // Update temperature feel and wind speed
-      document.getElementById('tempFeel').textContent = getTempFeel();
-      document.getElementById('windSpeed').textContent = getWindSpeed();
+      // Generate new wind and update display
+      generateWind();
+      const windDisplay = getWindDisplay();
+      document.getElementById('windArrow').textContent = windDisplay.arrow;
+      document.getElementById('windText').textContent = windDisplay.text;
+      document.getElementById('weatherDetail').textContent = getTempDescription();
 
       // Update particles (always reset for 'rays' since it changes based on time)
       if (particleSystem) {
@@ -2060,9 +2150,10 @@
       document.getElementById('fsTimeIcon').innerHTML = TIME_ICONS[currentTime] || TIME_ICONS.morning;
       document.getElementById('fsTimeLabel').textContent = currentTime.toUpperCase();
       document.getElementById('fsWeatherName').textContent = weatherInfo.name;
-      document.getElementById('fsWeatherDetail').textContent = weatherInfo.detail;
-      document.getElementById('fsTempFeel').textContent = getTempFeel();
-      document.getElementById('fsWindSpeed').textContent = getWindSpeed();
+      document.getElementById('fsWeatherDetail').textContent = getTempDescription();
+      const fsWindDisplay = getWindDisplay();
+      document.getElementById('fsWindArrow').textContent = fsWindDisplay.arrow;
+      document.getElementById('fsWindText').textContent = fsWindDisplay.text;
 
       // Update particle system
       if (weatherInfo.particles === 'rays') {
@@ -2239,9 +2330,10 @@
       document.getElementById('fsBiomeIcon').innerHTML = biomeIconData.path;
       document.getElementById('fsBiomeLabel').textContent = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
       document.getElementById('fsWeatherName').textContent = weatherInfo.name;
-      document.getElementById('fsWeatherDetail').textContent = weatherInfo.detail;
-      document.getElementById('fsTempFeel').textContent = getTempFeel();
-      document.getElementById('fsWindSpeed').textContent = getWindSpeed();
+      document.getElementById('fsWeatherDetail').textContent = getTempDescription();
+      const enterWindDisplay = getWindDisplay();
+      document.getElementById('fsWindArrow').textContent = enterWindDisplay.arrow;
+      document.getElementById('fsWindText').textContent = enterWindDisplay.text;
 
       // Show container
       container.classList.add('active');
