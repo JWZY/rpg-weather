@@ -1,0 +1,29 @@
+# RPG Weather Widget
+
+A tabletop RPG weather generator with 12 biomes, dynamic weather effects, and time of day. Perfect for D&D, Pathfinder, and other TTRPGs.
+
+**[Try it live](https://jwzy.github.io/rpg-weather/)**
+
+![Preview](preview.png)
+
+## Features
+
+- **12 Biomes** - Forest, Desert, Tundra, Swamp, Mountains, Plains, Coast, Jungle, Volcanic, Arctic, Savanna, and Cavern
+- **Dynamic Weather** - Each biome has unique weather patterns (rain, snow, sandstorms, volcanic ash, etc.)
+- **Time of Day** - Morning, Afternoon, Evening, and Night with visual overlays
+- **Animated Particles** - Weather effects rendered with animated particles
+- **iOS Widget Design** - Styled after iOS medium widgets (329x155pt)
+
+## Usage
+
+Open the page and use the control panel to:
+
+1. Select a **time of day**
+2. Choose a **biome**
+3. Pick a **weather condition** (or click Random)
+
+The widget updates in real-time with appropriate colors, icons, and particle effects.
+
+## License
+
+MIT
