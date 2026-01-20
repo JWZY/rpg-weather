@@ -372,6 +372,7 @@
       box-shadow: 0 0 4px rgba(255, 150, 50, 0.6);
     }
 
+    /* God ray particle */
     .particle.ray {
       width: 8px;
       height: 120px;
@@ -382,9 +383,9 @@
         rgba(255, 240, 150, 0.1) 60%,
         transparent 85%
       );
-      border-radius: 50% 50% 50% 50% / 10% 10% 90% 90%;
+      border-radius: 40% 40% 50% 50% / 5% 5% 50% 50%;
       filter: blur(3px);
-      box-shadow: 0 0 20px rgba(255, 240, 150, 0.3);
+      box-shadow: 0 0 15px rgba(255, 240, 150, 0.2);
     }
 
     .particle.sundust {
@@ -1162,13 +1163,21 @@
                 particle.classList.add('ray');
                 // Keep ray width thin (don't scale) to preserve tapered effect
                 const rayWidth = 8 + Math.random() * 15;
-                const rayHeight = s(100 + Math.random() * 60);
+                // Longer rays that stretch toward bottom edge
+                const rayHeight = s(180 + Math.random() * 80);
                 particle.style.width = rayWidth + 'px';
                 particle.style.height = rayHeight + 'px';
-                particle.style.left = Math.random() * width + 'px';
+                // Rays emanate from top-right corner (sun position)
+                // Spread rays across the widget, originating from top-right
+                const rayProgress = Math.random(); // 0 = far right, 1 = far left
+                const rayX = width * 0.95 - rayProgress * width * 0.9;
+                particle.style.left = rayX + 'px';
                 particle.style.top = s(-20) + 'px';
-                const angle = 5 + Math.random() * 15;
+                // Angle increases as rays go further left (fan out from sun)
+                // Right side rays: ~15deg, Left side rays: ~45deg
+                const angle = 15 + rayProgress * 30 + (Math.random() - 0.5) * 10;
                 particle.style.transform = `rotate(${angle}deg)`;
+                particle.style.transformOrigin = 'top center';
                 particle.style.opacity = 0.3 + Math.random() * 0.2;
                 particle.animate([
                   { opacity: 0.4, transform: `rotate(${angle}deg) scaleY(1)` },
@@ -1660,17 +1669,25 @@
                   easing: 'ease-in-out'
                 }).onfinish = () => particle.remove();
               } else {
-                // Dramatic god ray
+                // Dramatic god ray - emanating from top-right (sun position)
                 particle.classList.add('ray');
                 // Keep ray width thin (don't scale) to preserve tapered effect
                 const rayWidth = 8 + Math.random() * 15;
-                const rayHeight = s(100 + Math.random() * 60);
+                // Longer rays that stretch toward bottom edge
+                const rayHeight = s(180 + Math.random() * 80);
                 particle.style.width = rayWidth + 'px';
                 particle.style.height = rayHeight + 'px';
-                particle.style.left = Math.random() * width + 'px';
+                // Rays emanate from top-right corner (sun position)
+                // Spread rays across the widget, originating from top-right
+                const rayProgress = Math.random(); // 0 = far right, 1 = far left
+                const rayX = width * 0.95 - rayProgress * width * 0.9;
+                particle.style.left = rayX + 'px';
                 particle.style.top = s(-20) + 'px';
-                const angle = 5 + Math.random() * 15;
+                // Angle increases as rays go further left (fan out from sun)
+                // Right side rays: ~15deg, Left side rays: ~45deg
+                const angle = 15 + rayProgress * 30 + (Math.random() - 0.5) * 10;
                 particle.style.transform = `rotate(${angle}deg)`;
+                particle.style.transformOrigin = 'top center';
                 particle.animate([
                   { opacity: 0, transform: `rotate(${angle}deg) scaleY(0.7)` },
                   { opacity: 0.5, transform: `rotate(${angle}deg) scaleY(1)`, offset: 0.3 },
@@ -2005,6 +2022,11 @@
       // The widget in fullscreen container is centered, so we need to offset from center
       const startX = rect.left + rect.width / 2 - vw / 2;
       const startY = rect.top + rect.height / 2 - vh / 2;
+
+      // Add biome class to container so fullscreen UI inherits correct accent color
+      // Remove any existing biome class first
+      container.className = container.className.replace(/biome-\w+/g, '').trim();
+      container.classList.add(`biome-${currentBiome}`);
 
       // Start with widget at original position and scale 1
       container.classList.add('zooming');
