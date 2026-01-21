@@ -863,6 +863,33 @@
       transition: none;
       filter: none;
     }
+
+    /* Responsive: Mobile - reduce letterboxing, content fills more of screen */
+    @media (max-width: 767px) {
+      body {
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .control-panel {
+        width: 100%;
+        max-width: 329px;
+      }
+    }
+
+    /* Responsive: Desktop - maintain letterbox effect */
+    @media (min-width: 768px) {
+      body {
+        padding: 48px;
+      }
+    }
+
+    /* Large desktop - extra breathing room */
+    @media (min-width: 1200px) {
+      body {
+        padding: 64px;
+      }
+    }
   </style>
 </head>
 <body>
