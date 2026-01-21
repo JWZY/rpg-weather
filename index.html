@@ -405,8 +405,9 @@
     .particle.sand {
       width: 3px;
       height: 2px;
-      background: rgba(210, 180, 140, 0.7);
+      background: rgba(194, 154, 108, 0.95);
       border-radius: 1px;
+      box-shadow: 0 0 2px rgba(194, 154, 108, 0.5);
     }
 
     .particle.ash {
@@ -557,10 +558,42 @@
     }
 
     .hotkey-hint {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.25);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 5px;
+      height: 16px;
+      margin-left: 4px;
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      border-radius: 3px;
+      font-size: 9px;
+      line-height: 1;
+      font-weight: 500;
+      color: var(--text-tertiary);
+    }
+
+    .hotkey-hint:first-of-type {
       margin-left: auto;
-      font-weight: 400;
+    }
+
+    button.hotkey-hint {
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    button.hotkey-hint:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-secondary);
+    }
+
+    button.hotkey-hint:active {
+      transform: scale(0.95);
+    }
+
+    button.hotkey-hint svg {
+      opacity: 0.8;
     }
 
     /* Select dropdown styling */
@@ -629,29 +662,6 @@
       background: var(--accent);
       border-color: var(--accent);
       color: #000;
-    }
-
-    /* Randomize button - small inline version */
-    .randomize-btn {
-      padding: 3px 8px;
-      margin-left: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      border-radius: 4px;
-      color: var(--text-secondary);
-      font-size: 9px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .randomize-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      color: var(--text-primary);
-    }
-
-    .randomize-btn:active {
-      transform: scale(0.95);
     }
 
     /* Byline */
@@ -981,7 +991,7 @@
     <div class="control-group">
       <div class="control-label">
         <span>Weather</span>
-        <button class="randomize-btn" id="randomizeBtn">Randomize</button>
+        <button class="hotkey-hint" id="randomizeBtn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512" width="7" height="7" fill="currentColor"><path d="M106.75 215.06L1.2 370.95c-3.08 5 .1 11.5 5.93 12.14l208.26 22.07-108.64-190.1zM7.41 315.43L82.7 193.08 6.06 147.1c-2.67-1.6-6.06.32-6.06 3.43v162.81c0 4.03 5.29 5.53 7.41 2.09zM18.25 423.6l194.4 87.66c5.3 2.45 11.35-1.43 11.35-7.26v-65.67l-203.55-22.3c-4.45-.5-6.23 5.59-2.2 7.57zm81.22-257.78L179.4 22.88c4.34-7.06-3.59-15.25-10.78-11.14L17.81 110.35c-2.47 1.62-2.39 5.26.13 6.78l81.53 48.69zM240 176h109.21L253.63 7.62C250.5 2.54 245.25 0 240 0s-10.5 2.54-13.63 7.62L130.79 176H240zm233.94-28.9l-76.64 45.99 75.29 122.35c2.11 3.44 7.41 1.94 7.41-2.1V150.53c0-3.11-3.39-5.03-6.06-3.43zm-93.41 18.72l81.53-48.7c2.53-1.52 2.6-5.16.13-6.78l-150.81-98.6c-7.19-4.11-15.12 4.08-10.78 11.14l79.93 142.94zm79.02 250.21L256 438.32v65.67c0 5.84 6.05 9.71 11.35 7.26l194.4-87.66c4.03-1.97 2.25-8.06-2.2-7.56zm-86.3-200.97l-108.63 190.1 208.26-22.07c5.83-.65 9.01-7.14 5.93-12.14L373.25 215.06zM240 208H139.57L240 383.75 340.43 208H240z"/></svg>R</button>
         <span class="hotkey-hint">&uarr; &darr;</span>
       </div>
       <select class="control-select" id="weatherSelect">
@@ -1006,7 +1016,7 @@
       jungle: ['humid', 'rain', 'downpour', 'misty'],
       volcanic: ['ash', 'smoke', 'hot', 'fiery'],
       arctic: ['blizzard', 'snow', 'clear', 'ice_storm'],
-      savanna: ['clear', 'dry', 'windy', 'dust'],
+      savanna: ['clear', 'windy', 'dust'],
       cavern: ['damp', 'dripping', 'humid']
     };
 
@@ -1208,6 +1218,7 @@
     let currentWeather = 'clear';
     let currentTime = 'morning';
     let particleSystem = null;
+    let testMode = false;
 
     // Particle system class
     class WeatherParticles {
@@ -1356,17 +1367,24 @@
             case 'downpour':
               particle.classList.add('rain');
               const rainIntensity = type === 'downpour' ? 1.8 : type === 'storm' ? 1.4 : 1;
-              const windAngle = type === 'storm' ? 20 + Math.random() * 10 : 12 + Math.random() * 6;
+              // Use same wind-aware angle as createParticle
+              // CSS rotate: positive = clockwise = leans left (/), negative = leans right (\)
+              const prespawnRainAngles = { N: 0, NE: 15, E: 22, SE: 15, S: 0, SW: -15, W: -22, NW: -15 };
+              const baseAngle = currentWindDirection ? (prespawnRainAngles[currentWindDirection.name] || 0) : 0;
+              const stormBonus = type === 'storm' ? (baseAngle >= 0 ? 5 : -5) : 0;
+              const windAngle = baseAngle + stormBonus + (Math.random() - 0.5) * 6;
               const fallDistance = height - progress * height + s(30);
-              const horizontalDrift = Math.tan(windAngle * Math.PI / 180) * fallDistance;
+              // Calculate horizontal drift from wind
+              const prespawnDrift = getWindDrift(1);
+              const horizontalDrift = prespawnDrift.x * fallDistance * 0.5;
               particle.style.left = Math.random() * width + 'px';
               particle.style.top = (progress * height) + 'px';
               particle.style.height = s((18 + Math.random() * 14) * rainIntensity) + 'px';
-              particle.style.transform = `rotate(${-windAngle}deg)`;
+              particle.style.transform = `rotate(${windAngle}deg)`;
               particle.style.opacity = 0.6;
               particle.animate([
-                { transform: `translate(0, 0) rotate(${-windAngle}deg)`, opacity: 0.6 },
-                { transform: `translate(${horizontalDrift}px, ${fallDistance}px) rotate(${-windAngle}deg)`, opacity: 0.3 }
+                { transform: `translate(0, 0) rotate(${windAngle}deg)`, opacity: 0.6 },
+                { transform: `translate(${horizontalDrift}px, ${fallDistance}px) rotate(${windAngle}deg)`, opacity: 0.3 }
               ], {
                 duration: (1 - progress) * (type === 'downpour' ? 250 : type === 'storm' ? 300 : 400),
                 easing: 'linear'
@@ -1481,15 +1499,24 @@
               break;
 
             case 'wind':
+              // Wind streaks follow wind direction
+              const initWindDrift = getWindDrift(1.5);
               particle.style.width = s(30 + Math.random() * 40) + 'px';
               particle.style.height = s(1) + 'px';
               particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)';
-              particle.style.left = (progress * width) + 'px';
+              const initWindX = (width + s(100)) * (initWindDrift.x >= 0 ? 1 : -1);
+              // Start at progress point along the path
+              if (initWindDrift.x >= 0) {
+                particle.style.left = (progress * width) + 'px';
+              } else {
+                particle.style.left = (width - progress * width) + 'px';
+              }
               particle.style.top = Math.random() * height + 'px';
               particle.style.opacity = 0.3;
+              const remainingWindX = initWindX * (1 - progress);
               particle.animate([
-                { transform: 'translateX(0)', opacity: 0.3 },
-                { transform: `translateX(${width - progress * width + s(100)}px)`, opacity: 0 }
+                { transform: 'translate(0, 0)', opacity: 0.3 },
+                { transform: `translate(${remainingWindX}px, ${initWindDrift.y * s(40) * (1 - progress)}px)`, opacity: 0 }
               ], {
                 duration: (1 - progress) * (800 + Math.random() * 400),
                 easing: 'linear'
@@ -1568,12 +1595,12 @@
           rain: 40,
           storm: 25,
           downpour: 15,
-          snow: 80,
-          blizzard: 30,
+          snow: 70,
+          blizzard: 15,
           fog: 80,
           mist: 200,
-          sand: 35,
-          dust: 50,
+          sand: 20,
+          dust: 30,
           ash: 100,
           smoke: 120,
           sparks: 120,
@@ -1607,21 +1634,26 @@
             if (Math.random() < 0.85) {
               particle.classList.add('rain');
               const rainIntensity = this.type === 'downpour' ? 1.8 : this.type === 'storm' ? 1.4 : 1;
-              const rainDriftVec = getWindDrift(1.5);
-              // Convert wind drift to angle for rain visual
-              const baseAngle = this.type === 'storm' ? 15 : 8;
-              const windAngle = baseAngle + Math.atan2(rainDriftVec.x, 1) * 180 / Math.PI * 0.5 + Math.random() * 5;
+              // CSS rotate: positive = clockwise = leans LEFT (/)
+              //            negative = counter-clockwise = leans RIGHT (\)
+              // Wind blowing right (W/SW/NW) -> rain leans right -> NEGATIVE angle
+              // Wind blowing left (E/NE/SE) -> rain leans left -> POSITIVE angle
+              const rainAngles = { N: 0, NE: 15, E: 22, SE: 15, S: 0, SW: -15, W: -22, NW: -15 };
+              const baseRainAngle = currentWindDirection ? (rainAngles[currentWindDirection.name] || 0) : 0;
+              const stormExtra = this.type === 'storm' ? (baseRainAngle >= 0 ? 5 : -5) : 0;
+              const windAngle = baseRainAngle + stormExtra + (Math.random() - 0.5) * 6;
+              const rainDriftVec = getWindDrift(1);
               const totalFall = height + s(30);
-              const rainDrift = rainDriftVec.x * totalFall * 0.8;
+              const rainDrift = rainDriftVec.x * totalFall * 0.5;
               particle.style.left = Math.random() * width + 'px';
               particle.style.top = s(-15) + 'px';
               particle.style.height = s((18 + Math.random() * 14) * rainIntensity) + 'px';
-              particle.style.transform = `rotate(${-windAngle}deg)`;
+              particle.style.transform = `rotate(${windAngle}deg)`;
               particle.style.opacity = 0.6 + Math.random() * 0.3;
               const speed = this.type === 'downpour' ? 250 : this.type === 'storm' ? 300 : 400;
               particle.animate([
-                { transform: `translate(0, 0) rotate(${-windAngle}deg)`, opacity: 0.7 },
-                { transform: `translate(${rainDrift}px, ${totalFall}px) rotate(${-windAngle}deg)`, opacity: 0.35 }
+                { transform: `translate(0, 0) rotate(${windAngle}deg)`, opacity: 0.7 },
+                { transform: `translate(${rainDrift}px, ${totalFall}px) rotate(${windAngle}deg)`, opacity: 0.35 }
               ], {
                 duration: speed + Math.random() * 150,
                 easing: 'linear'
@@ -1645,30 +1677,40 @@
 
           case 'snow':
           case 'blizzard':
-            // Snow with wind influence
+            // Snow with wind influence - various sizes, falls off screen
             particle.classList.add('snowflake');
-            const snowSize = s(this.type === 'blizzard' ? 4 + Math.random() * 5 : 3 + Math.random() * 4);
+            // More size variety - tiny flakes to large chunks
+            const sizeRand = Math.random();
+            const snowSize = s(this.type === 'blizzard'
+              ? (sizeRand < 0.3 ? 2 + Math.random() * 2 : sizeRand < 0.7 ? 4 + Math.random() * 4 : 7 + Math.random() * 5)
+              : (sizeRand < 0.4 ? 2 + Math.random() * 2 : 3 + Math.random() * 4));
             particle.style.width = snowSize + 'px';
             particle.style.height = snowSize + 'px';
-            particle.style.left = Math.random() * width + 'px';
-            particle.style.top = s(-10) + 'px';
-            const snowDrift = getWindDrift(this.type === 'blizzard' ? 2.5 : 1);
-            const baseDrift = s(this.type === 'blizzard' ? 80 : 20);
-            const snowDriftX = baseDrift + snowDrift.x * s(100);
-            const snowDriftY = snowDrift.y * s(30);
-            const dur = this.type === 'blizzard' ? 800 + Math.random() * 400 : 2500 + Math.random() * 1500;
-            // Add gentle wobble for realistic floating
-            const wobble1 = s((Math.random() - 0.5) * 20);
-            const wobble2 = s((Math.random() - 0.5) * 25);
+            const snowDrift = getWindDrift(this.type === 'blizzard' ? 2 : 1);
+            const baseDrift = s(this.type === 'blizzard' ? 60 : 20);
+            const snowDriftX = baseDrift + snowDrift.x * s(60);
+            const snowDriftY = snowDrift.y * s(40);
+            // Simple random X position across full width, starting above screen
+            const snowStartX = Math.random() * (width + s(40)) - s(20);
+            particle.style.left = snowStartX + 'px';
+            particle.style.top = s(-20) + 'px';
+            // Blizzard is faster and more intense
+            const dur = this.type === 'blizzard' ? 500 + Math.random() * 300 : 2500 + Math.random() * 1500;
+            // More aggressive wobble for blizzard
+            const wobbleIntensity = this.type === 'blizzard' ? 35 : 20;
+            const wobble1 = s((Math.random() - 0.5) * wobbleIntensity);
+            const wobble2 = s((Math.random() - 0.5) * wobbleIntensity * 1.2);
+            // Fall well below the screen
+            const fallDistance = height + s(50);
             particle.animate([
-              { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
-              { transform: `translate(${snowDriftX * 0.2 + wobble1}px, ${height * 0.25 + snowDriftY * 0.25}px) rotate(90deg)`, opacity: 0.9, offset: 0.25 },
-              { transform: `translate(${snowDriftX * 0.5 + wobble2}px, ${height * 0.5 + snowDriftY * 0.5}px) rotate(180deg)`, opacity: 0.85, offset: 0.5 },
-              { transform: `translate(${snowDriftX * 0.8 + wobble1}px, ${height * 0.75 + snowDriftY * 0.75}px) rotate(270deg)`, opacity: 0.7, offset: 0.75 },
-              { transform: `translate(${snowDriftX}px, ${height + s(20) + snowDriftY}px) rotate(360deg)`, opacity: 0.3 }
+              { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.9 },
+              { transform: `translate(${snowDriftX * 0.3 + wobble1}px, ${fallDistance * 0.3}px) rotate(120deg)`, opacity: 0.9, offset: 0.3 },
+              { transform: `translate(${snowDriftX * 0.6 + wobble2}px, ${fallDistance * 0.6}px) rotate(240deg)`, opacity: 0.85, offset: 0.6 },
+              { transform: `translate(${snowDriftX * 0.85 + wobble1}px, ${fallDistance * 0.85}px) rotate(360deg)`, opacity: 0.7, offset: 0.85 },
+              { transform: `translate(${snowDriftX}px, ${fallDistance}px) rotate(420deg)`, opacity: 0 }
             ], {
               duration: dur,
-              easing: 'ease-in-out'
+              easing: 'linear'
             }).onfinish = () => particle.remove();
             break;
 
@@ -1730,35 +1772,70 @@
 
           case 'sand':
           case 'dust':
-            // Sand/dust heavily influenced by wind direction
-            particle.classList.add('sand');
-            const sandSize = s(this.type === 'sand' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2);
-            particle.style.width = sandSize + 'px';
-            particle.style.height = (sandSize * 0.6) + 'px';
-            const sandDrift = getWindDrift(2);
-            // Start position based on wind direction
-            if (sandDrift.x >= 0) {
-              particle.style.left = s(-10) + 'px';
+            const sandDrift = getWindDrift(1.2);
+            const sandTotalX = (width * 0.7 + s(30)) * (sandDrift.x >= 0 ? 1 : -1);
+
+            // 20% chance for large sand cloud, 80% small particles
+            if (Math.random() < 0.2) {
+              // Giant sand cloud
+              particle.classList.add('sandcloud');
+              const cloudW = s(80 + Math.random() * 120);
+              const cloudH = s(40 + Math.random() * 60);
+              particle.style.width = cloudW + 'px';
+              particle.style.height = cloudH + 'px';
+              particle.style.background = this.type === 'sand'
+                ? 'radial-gradient(ellipse, rgba(194, 154, 108, 0.35) 0%, rgba(194, 154, 108, 0.15) 40%, transparent 70%)'
+                : 'radial-gradient(ellipse, rgba(180, 160, 130, 0.25) 0%, rgba(180, 160, 130, 0.1) 40%, transparent 70%)';
+              particle.style.borderRadius = '50%';
+              particle.style.filter = 'blur(8px)';
+              // Start position
+              if (sandDrift.x >= 0) {
+                particle.style.left = -cloudW + 'px';
+              } else {
+                particle.style.left = (width + cloudW) + 'px';
+              }
+              particle.style.top = (Math.random() * height * 0.8) + 'px';
+              const cloudTotalX = (width + cloudW * 2) * (sandDrift.x >= 0 ? 1 : -1);
+              const cloudYDrift = s((Math.random() - 0.5) * 40);
+              particle.animate([
+                { transform: 'translate(0, 0) scale(0.8)', opacity: 0 },
+                { transform: `translate(${cloudTotalX * 0.2}px, ${cloudYDrift * 0.3}px) scale(1.1)`, opacity: 0.8, offset: 0.2 },
+                { transform: `translate(${cloudTotalX * 0.5}px, ${cloudYDrift * 0.6}px) scale(1.2)`, opacity: 0.7, offset: 0.5 },
+                { transform: `translate(${cloudTotalX * 0.8}px, ${cloudYDrift * 0.9}px) scale(1.1)`, opacity: 0.5, offset: 0.8 },
+                { transform: `translate(${cloudTotalX}px, ${cloudYDrift}px) scale(0.9)`, opacity: 0 }
+              ], {
+                duration: 2000 + Math.random() * 1500,
+                easing: 'ease-in-out'
+              }).onfinish = () => particle.remove();
             } else {
-              particle.style.left = (width + s(10)) + 'px';
+              // Small sand/dust particles
+              particle.classList.add('sand');
+              const sandSize = s(this.type === 'sand' ? 3 + Math.random() * 4 : 2.5 + Math.random() * 3);
+              particle.style.width = sandSize + 'px';
+              particle.style.height = (sandSize * 0.6) + 'px';
+              // Start position based on wind direction
+              if (sandDrift.x >= 0) {
+                particle.style.left = s(-10) + 'px';
+              } else {
+                particle.style.left = (width + s(10)) + 'px';
+              }
+              particle.style.top = Math.random() * height + 'px';
+              const sandSpeed = this.type === 'sand' ? 500 : 800;
+              const yWave1 = s((Math.random() - 0.5) * 15) + sandDrift.y * s(10);
+              const yWave2 = s((Math.random() - 0.5) * 20) + sandDrift.y * s(20);
+              const yWave3 = s((Math.random() - 0.5) * 15) + sandDrift.y * s(30);
+              const yWaveFinal = s((Math.random() - 0.5) * 25) + sandDrift.y * s(40);
+              particle.animate([
+                { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
+                { transform: `translate(${sandTotalX * 0.15}px, ${yWave1 * 0.5}px) rotate(90deg)`, opacity: 0.9, offset: 0.15 },
+                { transform: `translate(${sandTotalX * 0.5}px, ${yWave2}px) rotate(360deg)`, opacity: 0.85, offset: 0.5 },
+                { transform: `translate(${sandTotalX * 0.85}px, ${yWave3}px) rotate(540deg)`, opacity: 0.7, offset: 0.85 },
+                { transform: `translate(${sandTotalX}px, ${yWaveFinal}px) rotate(720deg)`, opacity: 0 }
+              ], {
+                duration: sandSpeed + Math.random() * 300,
+                easing: 'ease-in-out'
+              }).onfinish = () => particle.remove();
             }
-            particle.style.top = Math.random() * height + 'px';
-            const sandSpeed = this.type === 'sand' ? 500 : 800;
-            const sandTotalX = (width + s(40)) * (sandDrift.x >= 0 ? 1 : -1);
-            const yWave1 = s((Math.random() - 0.5) * 15) + sandDrift.y * s(10);
-            const yWave2 = s((Math.random() - 0.5) * 20) + sandDrift.y * s(20);
-            const yWave3 = s((Math.random() - 0.5) * 15) + sandDrift.y * s(30);
-            const yWaveFinal = s((Math.random() - 0.5) * 25) + sandDrift.y * s(40);
-            particle.animate([
-              { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
-              { transform: `translate(${sandTotalX * 0.25}px, ${yWave1}px) rotate(180deg)`, opacity: 0.75, offset: 0.25 },
-              { transform: `translate(${sandTotalX * 0.5}px, ${yWave2}px) rotate(360deg)`, opacity: 0.7, offset: 0.5 },
-              { transform: `translate(${sandTotalX * 0.75}px, ${yWave3}px) rotate(540deg)`, opacity: 0.5, offset: 0.75 },
-              { transform: `translate(${sandTotalX}px, ${yWaveFinal}px) rotate(720deg)`, opacity: 0 }
-            ], {
-              duration: sandSpeed + Math.random() * 300,
-              easing: 'ease-in-out'
-            }).onfinish = () => particle.remove();
             break;
 
           case 'ash':
@@ -1935,15 +2012,24 @@
             break;
 
           case 'wind':
+            // Wind streaks follow wind direction
+            const windStreakDrift = getWindDrift(1.5);
             particle.style.width = s(30 + Math.random() * 40) + 'px';
             particle.style.height = s(1) + 'px';
             particle.style.background = 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)';
-            particle.style.left = s(-50) + 'px';
+            // Start upwind
+            if (windStreakDrift.x >= 0) {
+              particle.style.left = s(-50) + 'px';
+            } else {
+              particle.style.left = (width + s(50)) + 'px';
+            }
             particle.style.top = Math.random() * height + 'px';
+            const windStreakX = (width + s(100)) * (windStreakDrift.x >= 0 ? 1 : -1);
+            const windStreakY = windStreakDrift.y * s(40);
             particle.animate([
-              { transform: 'translateX(0)', opacity: 0 },
-              { transform: `translateX(${s(100)}px)`, opacity: 0.4, offset: 0.3 },
-              { transform: `translateX(${width + s(100)}px)`, opacity: 0 }
+              { transform: 'translate(0, 0)', opacity: 0 },
+              { transform: `translate(${windStreakX * 0.3}px, ${windStreakY * 0.3}px)`, opacity: 0.4, offset: 0.3 },
+              { transform: `translate(${windStreakX}px, ${windStreakY}px)`, opacity: 0 }
             ], {
               duration: 800 + Math.random() * 400,
               easing: 'linear'
@@ -2032,8 +2118,8 @@
       document.getElementById('timeIcon').innerHTML = TIME_ICONS[currentTime] || TIME_ICONS.morning;
       document.getElementById('timeLabel').textContent = currentTime.toUpperCase();
 
-      // Generate new wind and update display
-      generateWind();
+      // Generate new wind and update display (skip in test mode)
+      if (!testMode) generateWind();
       const windDisplay = getWindDisplay();
       document.getElementById('windArrow').textContent = windDisplay.arrow;
       document.getElementById('windText').textContent = windDisplay.text;
@@ -2563,6 +2649,28 @@
       setupControls();
       setupFullscreen();
       populateWeatherOptions();
+
+      // Check for test mode via URL hash: #test=biome,weather,time,windDir
+      const hash = window.location.hash;
+      if (hash.startsWith('#test=')) {
+        const params = hash.slice(6).split(',');
+        if (params.length >= 4) {
+          const [biome, weather, time, windDir] = params;
+          testMode = true;
+          currentBiome = biome;
+          currentWeather = weather;
+          currentTime = time;
+          // Override wind direction
+          currentWindDirection = WIND_DIRECTIONS.find(d => d.name === windDir);
+          currentWindSpeed = 30; // Fixed moderate-strong wind for testing
+          // Hide controls in test mode
+          const controls = document.querySelector('.control-panel');
+          if (controls) controls.style.display = 'none';
+          // Hide footer
+          const footer = document.querySelector('.footer');
+          if (footer) footer.style.display = 'none';
+        }
+      }
 
       // Start loaded state
       widget.classList.remove('loading');
