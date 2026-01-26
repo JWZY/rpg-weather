@@ -4,21 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RPG Weather Widget</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'><path fill='%23f4a261' d='M575.2 325.7c.2-1.9.8-3.7.8-5.6 0-35.3-28.7-64-64-64-12.6 0-24.2 3.8-34.1 10-17.6-38.8-56.5-66-101.9-66-61.8 0-112 50.1-112 112 0 3 .7 5.8.9 8.7-49.6 3.7-88.9 44.7-88.9 95.3 0 53 43 96 96 96h272c53 0 96-43 96-96 0-42.1-27.2-77.4-64.8-90.4zm-430.4-22.6c-43.7-43.7-43.7-114.7 0-158.3 43.7-43.7 114.7-43.7 158.4 0 9.7 9.7 16.9 20.9 22.3 32.7 9.8-3.7 20.1-6 30.7-7.5L386 81.1c4-11.9-7.3-23.1-19.2-19.2L279 91.2 237.5 8.4C232-2.8 216-2.8 210.4 8.4L169 91.2 81.1 61.9C69.3 58 58 69.3 61.9 81.1l29.3 87.8-82.8 41.5c-11.2 5.6-11.2 21.5 0 27.1l82.8 41.4-29.3 87.8c-4 11.9 7.3 23.1 19.2 19.2l76.1-25.3c6.1-12.4 14-23.7 23.6-33.5-13.1-5.4-25.4-13.4-36-24zm-4.8-79.2c0 40.8 29.3 74.8 67.9 82.3 8-4.7 16.3-8.8 25.2-11.7 5.4-44.3 31-82.5 67.4-105C287.3 160.4 258 140 224 140c-46.3 0-84 37.6-84 83.9z'/></svg>">
+  <link rel="icon" type="image/png" href="rpg-weather-1.png?v=1">
+  <link rel="apple-touch-icon" href="rpg-weather-1.png?v=1">
   <meta name="description" content="A tabletop RPG weather generator with 12 biomes, dynamic weather, and time of day. Perfect for D&D, Pathfinder, and other TTRPGs.">
 
   <!-- Open Graph / Social Media Preview -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="RPG Weather Widget">
   <meta property="og:description" content="A tabletop RPG weather generator with 12 biomes, dynamic weather, and time of day.">
-  <meta property="og:image" content="https://jwzy.github.io/rpg-weather/preview.png">
+  <meta property="og:image" content="https://jwzy.github.io/rpg-weather/preview.png?v=2">
   <meta property="og:url" content="https://jwzy.github.io/rpg-weather/">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="RPG Weather Widget">
   <meta name="twitter:description" content="A tabletop RPG weather generator with 12 biomes, dynamic weather, and time of day.">
-  <meta name="twitter:image" content="https://jwzy.github.io/rpg-weather/preview.png">
+  <meta name="twitter:image" content="https://jwzy.github.io/rpg-weather/preview.png?v=2">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
@@ -2882,6 +2883,48 @@
           // Hide footer
           const footer = document.querySelector('.footer');
           if (footer) footer.style.display = 'none';
+        }
+      }
+
+      // Preview mode: #preview=biome,weather,time,windDir (1200x630, no rounded corners)
+      if (hash.startsWith('#preview=')) {
+        const params = hash.slice(9).split(',');
+        if (params.length >= 4) {
+          const [biome, weather, time, windDir] = params;
+          testMode = true;
+          currentBiome = biome;
+          currentWeather = weather;
+          currentTime = time;
+          currentWindDirection = WIND_DIRECTIONS.find(d => d.name === windDir);
+          currentWindSpeed = 30;
+
+          // Hide controls and footer
+          const controls = document.querySelector('.control-panel');
+          if (controls) controls.style.display = 'none';
+          const footer = document.querySelector('.byline');
+          if (footer) footer.style.display = 'none';
+
+          // Scale up widget: 329x155 -> 1200x630 (scale ≈ 3.65x width, 4.06x height)
+          // Use uniform scale based on width to maintain aspect ratio, then adjust height
+          const scaleX = 1200 / 329;
+          const scaleY = 630 / 155;
+
+          widget.style.width = '329px';
+          widget.style.height = '155px';
+          widget.style.borderRadius = '0';
+          widget.style.boxShadow = 'none';
+          widget.style.transform = `scale(${scaleX}, ${scaleY})`;
+          widget.style.transformOrigin = 'top left';
+
+          // Body setup for exact 1200x630 output
+          document.body.style.margin = '0';
+          document.body.style.padding = '0';
+          document.body.style.width = '1200px';
+          document.body.style.height = '630px';
+          document.body.style.minHeight = '630px';
+          document.body.style.overflow = 'hidden';
+          document.body.style.display = 'block';
+          document.body.style.background = '#000';
         }
       }
 
